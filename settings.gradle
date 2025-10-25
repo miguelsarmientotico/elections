@@ -1,0 +1,6 @@
+include ':api'
+include ':util'
+include ':microservices:candidate-service'
+include ':microservices:comment-service'
+include ':microservices:news-article-service'
+include ':microservices:candidate-composite-service'
