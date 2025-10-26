@@ -1,0 +1,19 @@
+spring.application.name: candidate-composite-service
+server.port: 7000
+server.error.include-message: always
+
+app:
+  candidate-service:
+    host: localhost
+    port: 7001
+  comment-service:
+    host: localhost
+    port: 7002
+  news-article-service:
+    host: localhost
+    port: 7003
+
+logging:
+  level:
+    root: INFO
+    pe.elections.microservices: DEBUG

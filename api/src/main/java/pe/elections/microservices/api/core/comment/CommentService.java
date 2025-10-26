@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface CommentService {
 
     @GetMapping(
-        value = "/comment/{commentId}",
+        value = "/comment",
         produces = "application/json"
     )
     List<Comment> getComments(

@@ -1,0 +1,6 @@
+spring.application.name: candidate-service
+server.port: 7001
+logging:
+  level:
+    root: INFO
+    pe.elections.microservices: DEBUG
