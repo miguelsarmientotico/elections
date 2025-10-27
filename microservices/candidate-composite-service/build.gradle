@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.0-M3'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.5.7'
+  	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'pe.elections.microservices.composite.candidate'
@@ -10,19 +10,21 @@ description = 'Candidate Composite Service'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
 repositories {
 	mavenCentral()
-	maven { url = 'https://repo.spring.io/snapshot' }
+}
+
+jar {
+	enabled = false
 }
 
 dependencies {
 	implementation project(':api')
 	implementation project(':util')
-
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

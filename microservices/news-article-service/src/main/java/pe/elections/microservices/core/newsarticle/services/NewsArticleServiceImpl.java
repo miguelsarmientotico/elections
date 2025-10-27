@@ -27,7 +27,7 @@ public class NewsArticleServiceImpl implements NewsArticleService {
     @Override
     public List<NewsArticle> getNewsArticles(int candidateId) {
         if (candidateId < 1) {
-            throw new InvalidInputException("Invalid CandidateId: " + candidateId);
+            throw new InvalidInputException("Invalid candidateId: " + candidateId);
         }
         if (candidateId == 113) {
             LOG.debug("No news found for candidateId: {}", candidateId);

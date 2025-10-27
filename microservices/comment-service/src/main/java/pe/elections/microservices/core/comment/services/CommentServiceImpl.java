@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pe.elections.microservices.api.core.comment.Comment;
 import pe.elections.microservices.api.core.comment.CommentService;
-import pe.elections.microservices.api.core.newsarticle.NewsArticle;
 import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.util.http.ServiceUtil;
 
@@ -28,7 +27,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public List<Comment> getComments(int candidateId) {
         if (candidateId < 1) {
-            throw new InvalidInputException("Invalid CandidateId: " + candidateId);
+            throw new InvalidInputException("Invalid candidateId: " + candidateId);
         }
         if (candidateId == 113) {
             LOG.debug("No comments found for candidateId: {}", candidateId);

@@ -9,7 +9,7 @@ description = 'Api Service'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -18,7 +18,7 @@ repositories {
 }
 
 ext {
-    springBootVersion = '4.0.0-M3'
+    springBootVersion = '3.5.7'
 }
 
 dependencies {

@@ -1,5 +1,6 @@
 spring.application.name: candidate-service
 server.port: 7001
+server.error.include-message: always
 logging:
   level:
     root: INFO

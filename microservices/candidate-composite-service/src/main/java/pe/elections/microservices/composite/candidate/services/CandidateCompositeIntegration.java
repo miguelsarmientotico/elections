@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import pe.elections.microservices.api.core.candidate.Candidate;
 import pe.elections.microservices.api.core.candidate.CandidateService;
 import pe.elections.microservices.api.core.comment.Comment;
@@ -25,7 +27,6 @@ import pe.elections.microservices.api.core.newsarticle.NewsArticleService;
 import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.api.exceptions.NotFoundException;
 import pe.elections.microservices.util.http.HttpErrorInfo;
-import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class CandidateCompositeIntegration implements CandidateService, CommentService, NewsArticleService {
@@ -67,7 +68,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
             switch (HttpStatus.resolve(ex.getStatusCode().value())) {
                 case NOT_FOUND:
                     throw new NotFoundException(getErrorMessage(ex));
-                case UNPROCESSABLE_CONTENT:
+                case UNPROCESSABLE_ENTITY:
                     throw new InvalidInputException(getErrorMessage(ex));
                 default:
                     LOG.warn("Got an unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());

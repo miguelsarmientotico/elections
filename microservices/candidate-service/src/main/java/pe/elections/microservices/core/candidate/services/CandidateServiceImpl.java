@@ -27,7 +27,7 @@ public class CandidateServiceImpl implements CandidateService {
         if (candidateId < 1) {
             throw new InvalidInputException("Invalid candidateId: " + candidateId);
         }
-        if (candidateId == 13) {
+        if (candidateId == 113) {
             throw new NotFoundException("No candidate found for candidateId: " + candidateId);
         }
         return new Candidate(candidateId, "NameOfCandidate", 80, serviceUtil.getServiceAddress());
