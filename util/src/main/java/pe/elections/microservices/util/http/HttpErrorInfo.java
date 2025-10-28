@@ -5,10 +5,14 @@ import java.time.ZonedDateTime;
 import org.springframework.http.HttpStatus;
 
 public class HttpErrorInfo {
-    private final ZonedDateTime timestamp;
-    private final String path;
-    private final HttpStatus httpStatus;
-    private final String message;
+    private ZonedDateTime timestamp;
+    private String path;
+    private HttpStatus httpStatus;
+    private String message;
+
+    public HttpErrorInfo() {
+        // Constructor vacío necesario para deserialización
+    }
 
     public HttpErrorInfo(
         HttpStatus httpStatus,
@@ -24,17 +28,36 @@ public class HttpErrorInfo {
     public ZonedDateTime getTimestamp() {
         return timestamp;
     }
+
+    public void setTimestamp(ZonedDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
     public String getPath() {
         return path;
     }
-    public HttpStatus getStatus() {
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public HttpStatus getHttpStatus() {
         return httpStatus;
     }
+
+    public void setHttpStatus(HttpStatus httpStatus) {
+        this.httpStatus = httpStatus;
+    }
+
     public String getMessage() {
         return message;
     }
-    public String getError() {
-        return httpStatus.getReasonPhrase();
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
+    public String getError() {
+        return httpStatus != null ? httpStatus.getReasonPhrase() : null;
+    }
 }

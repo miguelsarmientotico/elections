@@ -80,8 +80,10 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     private String getErrorMessage(HttpClientErrorException ex){
         try {
+            LOG.info("getErrorMessage");
+            LOG.info(ex.getResponseBodyAsString());
             return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
-        } catch (Exception ioex) {
+        } catch (IOException ioex) {
             return ex.getMessage();
         }
     }

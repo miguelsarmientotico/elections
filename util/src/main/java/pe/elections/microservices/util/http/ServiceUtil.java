@@ -1,6 +1,7 @@
 package pe.elections.microservices.util.http;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ public class ServiceUtil {
     private String findMyHostname() {
         try {
             return InetAddress.getLocalHost().getHostName();
-        } catch (Exception e) {
+        } catch (UnknownHostException e) {
             return "unknown host name";
         }
     }
@@ -39,7 +40,7 @@ public class ServiceUtil {
     private String findMyIpAddress() {
         try {
             return InetAddress.getLocalHost().getHostAddress();
-        } catch (Exception e) {
+        } catch (UnknownHostException e) {
             return "unknown IP address";
         }
     }
