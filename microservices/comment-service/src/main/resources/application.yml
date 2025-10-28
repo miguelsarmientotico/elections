@@ -5,3 +5,7 @@ logging:
   level:
     root: INFO
     pe.elections.microservices: DEBUG
+
+---
+spring.config.activate.on-profile: docker
+server.port: 8080

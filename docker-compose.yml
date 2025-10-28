@@ -1,0 +1,39 @@
+version: '1.1'
+
+services:
+  candidate:
+    build: microservices/candidate-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+  comment:
+    build: microservices/comment-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+  news-article:
+    build: microservices/news-article-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  candidate-composite:
+    build: microservices/candidate-composite-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    

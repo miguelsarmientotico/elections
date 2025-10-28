@@ -17,3 +17,18 @@ logging:
   level:
     root: INFO
     pe.elections.microservices: DEBUG
+
+---
+spring.config.activate.on-profile: docker
+server.port: 8080
+
+app:
+  candidate-service:
+    host: candidate
+    port: 8080
+  comment-service:
+    host: comment
+    port: 8080
+  news-article-service:
+    host: news-article
+    port: 8080
