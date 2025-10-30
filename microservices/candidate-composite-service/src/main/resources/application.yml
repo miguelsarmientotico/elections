@@ -1,7 +1,44 @@
 spring.application.name: candidate-composite-service
+
+springdoc:
+  swagger-ui.path: /openapi/swagger-ui.html
+  api-docs.path: /openapi/v3/api-docs
+  packagesToScan: pe.elections.microservices.composite.candidate
+  pathsToMatch: /**
+
+api:
+
+  common:
+    version: 1.0.0
+    title: Sample API
+    description: Description of the API...
+    termsOfService: MY TERMS OF SERVICE
+    license: License Candidate
+    licenseUrl: License Candidate URL
+
+    externalDocDesc: Pagina Wiki
+    externalDocUrl: Pagina Wiki URL
+    contact:
+      name: Name contact
+      url: URL contact
+      email: sarmientomiguel3@gmail.com
+
+  responseCodes:
+    ok.description: OK
+    badRequest.description: Bad Request, invalid format of the request. See response message for more information
+    notFound.description: Not Found, the specific id does not exist
+    unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message form more information
+
+  candidate-composite:
+    get-composite-candidate:
+      description: Return a composite view of the specified candidate id
+      notes: |
+        # Normal response
+        Returns the candidate information along with related comments and news articles
+
+
 server.port: 7000
 server.error.include-message: always
-
 app:
   candidate-service:
     host: localhost
