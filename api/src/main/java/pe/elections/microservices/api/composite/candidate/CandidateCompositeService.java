@@ -1,15 +1,32 @@
 package pe.elections.microservices.api.composite.candidate;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "CandidateComposite", description = "REST API for composite product information.")
 public interface CandidateCompositeService {
+
+    @Operation(
+        summary = "{}",
+        description = "{}"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "400", description = "{}"),
+        @ApiResponse(responseCode = "422", description = "{}"),
+    })
+    @PostMapping(
+        value = "/candidate-composite",
+        consumes = "application/json"
+    )
+    void createCandidate(@RequestBody CandidateAggregate body);
 
     @Operation(
         summary = "${api.candidate-composite.get-composite-candidate.description}",
@@ -26,4 +43,16 @@ public interface CandidateCompositeService {
         produces = "application/json"
     )
     CandidateAggregate getCandidate(@PathVariable int candidateId);
+
+    @Operation(
+        summary = "{}",
+        description = "{}"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "400", description = "{}"),
+        @ApiResponse(responseCode = "422", description = "{}"),
+    })
+    @DeleteMapping(value = "/candidate-composite/{candidateId}")
+    void deleteCandidate(@PathVariable int candidateId);
+
 }

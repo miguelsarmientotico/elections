@@ -1,38 +1,49 @@
-package pe.elections.microservices.api.core.newsarticle;
+package pe.elections.microservices.core.newsarticle.persistence;
 
 import java.time.LocalDateTime;
 
-public class NewsArticle {
-    private int candidateId;
-    private int newsArticleId;
-    private String title;
-    private String content;
-    private String author;
-    private LocalDateTime publishDate;
-    private String category;
-    private String serviceAddress;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
-    public NewsArticle() {
-        candidateId = 0;
-        newsArticleId = 0;
-        title = null;
-        content = null;
-        author = null;
-        publishDate = null;
-        category = null;
-        serviceAddress = null;
+@Entity
+@Table(name = "news_articles", indexes = { @Index(name = "news_article_unique_idx", unique = true, columnList = "candidateId,newsArticleId")})
+public class NewsArticleEntity {
+    @Id @GeneratedValue
+    private int id;
+
+    @Version
+    private int version;
+
+    private int candidateId;
+
+    private int newsArticleId;
+
+    private String title;
+
+    private String content;
+
+    private String author;
+
+    private LocalDateTime publishDate;
+
+    private String category;
+
+    public NewsArticleEntity() {
     }
 
-    public NewsArticle(
+    public NewsArticleEntity(
         int candidateId,
         int newsArticleId,
         String title,
         String content,
         String author,
         LocalDateTime publishDate,
-        String category,
-        String serviceAddress
-    ) {
+        String category
+    ){
         this.candidateId = candidateId;
         this.newsArticleId = newsArticleId;
         this.title = title;
@@ -40,7 +51,21 @@ public class NewsArticle {
         this.author = author;
         this.publishDate = publishDate;
         this.category = category;
-        this.serviceAddress = serviceAddress;
+    }
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     public int getCandidateId() {
@@ -98,12 +123,5 @@ public class NewsArticle {
     public void setCategory(String category) {
         this.category = category;
     }
-
-    public String getServiceAddress() {
-        return serviceAddress;
-    }
-
-    public void setServiceAddress(String serviceAddress) {
-        this.serviceAddress = serviceAddress;
-    }
 }
+

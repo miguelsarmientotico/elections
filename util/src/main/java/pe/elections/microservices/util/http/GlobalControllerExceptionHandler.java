@@ -2,6 +2,7 @@ package pe.elections.microservices.util.http;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +14,21 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import pe.elections.microservices.api.exceptions.NotFoundException;
+import pe.elections.microservices.api.exceptions.BadRequestException;
 import pe.elections.microservices.api.exceptions.InvalidInputException;
 
 
 @RestControllerAdvice
 class GlobalControllerExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(GlobalControllerExceptionHandler.class);
+
+    @ResponseStatus(BAD_REQUEST)
+    @ExceptionHandler(BadRequestException.class)
+    public @ResponseBody HttpErrorInfo handleBadRequestExceptions(
+        ServerHttpRequest request, BadRequestException ex
+    ) {
+        return createHttpErrorinfo(BAD_REQUEST, request, ex);
+    }
 
     @ResponseStatus(NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
