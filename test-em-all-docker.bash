@@ -3,9 +3,9 @@
 : ${HOST=localhost}
 : ${PORT=8080}
 : ${CAND_ID_CMTS_NEWS=1}
-: ${CAND_ID_NOT_FOUND=113}
+: ${CAND_ID_NOT_FOUND=13}
 : ${CAND_ID_NOT_CMTS=113}
-: ${CAND_ID_NOT_NEWS=113}
+: ${CAND_ID_NOT_NEWS=213}
 
 function assertCurl() {
 
@@ -74,6 +74,50 @@ function waitForService() {
   echo "DONE, continues..."
 }
 
+function recreateComposite() {
+  local candidateId=$1
+  local composite=$2
+
+  assertCurl 200 "curl -X DELETE http://$HOST:$PORT/candidate-composite/${candidateId} -s"
+  curl -X POST http://$HOST:$PORT/candidate-composite -H "Content-Type: application/json" --data "$composite"
+}
+
+function setupTestdata() {
+
+  body="{\"candidateId\":$CAND_ID_NOT_CMTS"
+  body+=\
+',"name":"candidate name A","edad":30, "newsArticles":[
+  {"newsArticleId":1,"title":"Title 1","content":"Content 1","author":"Author 1","publishDate":"2024-01-15T10:00:00","category":"Politics"},
+  {"newsArticleId":2,"title":"Title 2","content":"Content 2","author":"Author 2","publishDate":"2024-01-16T11:30:00","category":"Economy"},
+  {"newsArticleId":3,"title":"Title 3","content":"Content 3","author":"Author 3","publishDate":"2024-01-17T14:45:00","category":"Technology"}
+]}'
+  recreateComposite "$CAND_ID_NOT_CMTS" "$body"
+
+  body="{\"candidateId\":$CAND_ID_NOT_NEWS"
+  body+=\
+',"name":"candidate name B","edad":29, "comments":[
+  {"commentId":1,"content":"Excellent candidate","author":"Voter A","createdAt":"2024-01-18T08:00:00"},
+  {"commentId":2,"content":"Fully supported","author":"Voter B","createdAt":"2024-01-18T09:15:00"},
+  {"commentId":3,"content":"Great proposals","author":"Voter C","createdAt":"2024-01-18T10:30:00"}
+]}'
+  recreateComposite "$CAND_ID_NOT_NEWS" "$body"
+
+
+  body="{\"candidateId\":$CAND_ID_CMTS_NEWS"
+  body+=\
+',"name":"candidate name C","edad":31, "comments":[
+  {"commentId":1,"content":"Excellent candidate","author":"Voter A","createdAt":"2024-01-18T08:00:00"},
+  {"commentId":2,"content":"Fully supported","author":"Voter B","createdAt":"2024-01-18T09:15:00"},
+  {"commentId":3,"content":"Great proposals","author":"Voter C","createdAt":"2024-01-18T10:30:00"}
+  ], "newsArticles":[
+  {"newsArticleId":1,"title":"Title 1","content":"Content 1","author":"Author 1","publishDate":"2024-01-15T10:00:00","category":"Politics"},
+  {"newsArticleId":2,"title":"Title 2","content":"Content 2","author":"Author 2","publishDate":"2024-01-16T11:30:00","category":"Economy"},
+  {"newsArticleId":3,"title":"Title 3","content":"Content 3","author":"Author 3","publishDate":"2024-01-17T14:45:00","category":"Technology"}
+  ]}'
+  recreateComposite "$CAND_ID_CMTS_NEWS" "$body"
+
+}
+
 set -e
 
 echo "Start Tests:" `date`
@@ -87,23 +131,35 @@ then
   echo "$ docker compose down --remove-orphans"
   docker compose down --remove-orphans
   echo "$ docker compose up -d"
-  docker compose up -d
+  docker compose up -d --build
 fi
 
-waitForService curl http://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS
+waitForService curl -X DELETE http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_FOUND
+
+setupTestdata
 
 assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
 assertEqual $CAND_ID_CMTS_NEWS $(echo $RESPONSE | jq .candidateId)
-assertEqual 1 $(echo $RESPONSE | jq ".comments | length")
-assertEqual 1 $(echo $RESPONSE | jq ".newsArticles | length")
+assertEqual 3 $(echo $RESPONSE | jq ".comments | length")
+assertEqual 3 $(echo $RESPONSE | jq ".newsArticles | length")
 
 assertCurl 404 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_FOUND -S"
 assertEqual "No candidate found for candidateId: $CAND_ID_NOT_FOUND" "$(echo $RESPONSE | jq -r .message)"
 
+assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_NEWS -s"
+assertEqual $CAND_ID_NOT_NEWS $(echo $RESPONSE | jq .candidateId)
+assertEqual 3 $(echo $RESPONSE | jq ".comments | length")
+assertEqual 0 $(echo $RESPONSE | jq ".newsArticles | length")
+
+assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_CMTS -s"
+assertEqual $CAND_ID_NOT_CMTS $(echo $RESPONSE | jq .candidateId)
+assertEqual 0 $(echo $RESPONSE | jq ".comments | length")
+assertEqual 3 $(echo $RESPONSE | jq ".newsArticles | length")
+
 assertCurl 422 "curl http://$HOST:$PORT/candidate-composite/-1 -s"
 assertEqual "\"Invalid candidateId: -1\"" "$(echo $RESPONSE | jq .message)"
 
-assertCurl 400 "curl http://$HOST:$PORT/candidate-composite/invalidProductId -s"
+assertCurl 400 "curl http://$HOST:$PORT/candidate-composite/invalidCandidateId -s"
 assertEqual "\"Type mismatch.\"" "$(echo $RESPONSE | jq .message)"
 
 echo "Swagger/OpenAPI tests"

@@ -1,11 +1,32 @@
-spring.application.name: candidate-service
-server.port: 7001
-server.error.include-message: always
+spring:
+  application:
+    name: candidate-service
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: candidate-db
+
+server:
+  port: 7001
+  error:
+    include-message: always
+
 logging:
   level:
     root: INFO
     pe.elections.microservices: DEBUG
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 ---
-spring.config.activate.on-profile: docker
-server.port: 8080
+spring:
+  config:
+    activate:
+      on-profile: docker
+  data:
+    mongodb:
+      host: mongodb
+      database: candidate-db
+
+server:
+  port: 8080

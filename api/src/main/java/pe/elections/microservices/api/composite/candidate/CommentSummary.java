@@ -3,11 +3,16 @@ package pe.elections.microservices.api.composite.candidate;
 import java.time.LocalDateTime;
 
 public class CommentSummary {
-    private final int commentId;
-    private final String content;
-    private final String author;
-    private final LocalDateTime createdAt;
+    private int commentId;
+    private String content;
+    private String author;
+    private LocalDateTime createdAt;
 
+    // Constructor vacío (OBLIGATORIO para Jackson)
+    public CommentSummary() {
+    }
+    
+    // Constructor con parámetros (opcional)
     public CommentSummary(
         int commentId,
         String content,
@@ -20,20 +25,36 @@ public class CommentSummary {
         this.createdAt = createdAt;
     }
 
+    // Getters y setters para TODOS los campos
     public int getCommentId() {
         return commentId;
+    }
+
+    public void setCommentId(int commentId) {
+        this.commentId = commentId;
     }
 
     public String getContent() {
         return content;
     }
 
+    public void setContent(String content) {
+        this.content = content;
+    }
+
     public String getAuthor() {
         return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

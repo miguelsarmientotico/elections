@@ -3,13 +3,18 @@ package pe.elections.microservices.api.composite.candidate;
 import java.time.LocalDateTime;
 
 public class NewsArticleSummary {
-    private final int newsArticleId;
-    private final String title;
-    private final String content;
-    private final String author;
-    private final LocalDateTime publishDate;
-    private final String category;
+    private int newsArticleId;
+    private String title;
+    private String content;
+    private String author;
+    private LocalDateTime publishDate;
+    private String category;
 
+    // Constructor vacío (OBLIGATORIO para Jackson)
+    public NewsArticleSummary() {
+    }
+    
+    // Constructor con parámetros (opcional)
     public NewsArticleSummary(
         int newsArticleId,
         String title,
@@ -26,28 +31,52 @@ public class NewsArticleSummary {
         this.category = category;
     }
 
+    // Getters y setters para TODOS los campos
     public int getNewsArticleId() {
         return newsArticleId;
+    }
+
+    public void setNewsArticleId(int newsArticleId) {
+        this.newsArticleId = newsArticleId;
     }
 
     public String getTitle() {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getContent() {
         return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public String getAuthor() {
         return author;
     }
 
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
     public LocalDateTime getPublishDate() {
         return publishDate;
+    }
+
+    public void setPublishDate(LocalDateTime publishDate) {
+        this.publishDate = publishDate;
     }
 
     public String getCategory() {
         return category;
     }
-}
 
+    public void setCategory(String category) {
+        this.category = category;
+    }
+}

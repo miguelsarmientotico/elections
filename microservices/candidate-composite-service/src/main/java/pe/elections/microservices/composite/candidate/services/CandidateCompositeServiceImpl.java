@@ -42,6 +42,35 @@ public class CandidateCompositeServiceImpl implements CandidateCompositeService 
         return createCandidateAggregate(candidate, comments, newsArticles, serviceUtil.getServiceAddress());
     }
 
+    @Override
+    public void createCandidate(CandidateAggregate body) {
+        try {
+            Candidate candidate = new Candidate(body.getCandidateId(), body.getName(), body.getEdad(), null);
+            integration.createCandidate(candidate);
+            if (body.getComments() != null) {
+                body.getComments().forEach(r -> {
+                    Comment comment = new Comment(body.getCandidateId(), r.getCommentId(), r.getContent(), r.getAuthor(), r.getCreatedAt(), null);
+                    integration.createComment(comment);
+                });
+            }
+            if (body.getNewsArticles() != null) {
+                body.getNewsArticles().forEach(r -> {
+                    NewsArticle newsArticle = new NewsArticle(body.getCandidateId(), r.getNewsArticleId(), r.getTitle(), r.getContent(), r.getAuthor(), r.getPublishDate(), r.getCategory(), null);
+                    integration.createNewsArticle(newsArticle);
+                });
+            }
+        } catch (RuntimeException re) {
+            throw re;
+        }
+    }
+
+    @Override
+    public void deleteCandidate(int candidateId) {
+        integration.deleteCandidate(candidateId);
+        integration.deleteComments(candidateId);
+        integration.deleteNewsArticle(candidateId);
+    }
+
     private CandidateAggregate createCandidateAggregate(
         Candidate candidate,
         List<Comment> comments,
