@@ -6,6 +6,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
@@ -14,16 +15,21 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import pe.elections.microservices.api.core.newsarticle.NewsArticle;
+import pe.elections.microservices.api.event.Event;
 import pe.elections.microservices.core.newsarticle.persistence.NewsArticleEntity;
 import pe.elections.microservices.core.newsarticle.persistence.NewsArticleRepository;
 import reactor.core.publisher.Mono;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
+    "spring.cloud.stream.defaultBinder=rabbit",
+    "logging.level.pe.elections.microservices=DEBUG"
+})
 class NewsArticleServiceApplicationTests extends MySqlTestBase {
     
     @Autowired
@@ -31,6 +37,10 @@ class NewsArticleServiceApplicationTests extends MySqlTestBase {
 
     @Autowired
     private NewsArticleRepository repository;
+
+    @Autowired
+    @Qualifier("messageProcessor")
+    private Consumer<Event<Integer, NewsArticle>> messageProcessor;
 
     @BeforeEach
     void setupDb() {
