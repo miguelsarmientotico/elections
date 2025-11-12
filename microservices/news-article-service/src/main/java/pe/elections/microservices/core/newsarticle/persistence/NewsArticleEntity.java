@@ -1,6 +1,7 @@
 package pe.elections.microservices.core.newsarticle.persistence;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import static java.lang.String.format;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,7 +29,7 @@ public class NewsArticleEntity {
 
     private String author;
 
-    private LocalDateTime publishDate;
+    private Instant publishDate;
 
     private String category;
 
@@ -41,7 +42,7 @@ public class NewsArticleEntity {
         String title,
         String content,
         String author,
-        LocalDateTime publishDate,
+        Instant publishDate,
         String category
     ){
         this.candidateId = candidateId;
@@ -52,6 +53,12 @@ public class NewsArticleEntity {
         this.publishDate = publishDate;
         this.category = category;
     }
+
+    @Override
+    public String toString() {
+        return format("NewsArticleEntity: %s/%d", candidateId, newsArticleId);
+    }
+
     public int getId() {
         return id;
     }
@@ -108,11 +115,11 @@ public class NewsArticleEntity {
         this.author = author;
     }
 
-    public LocalDateTime getPublishDate() {
+    public Instant getPublishDate() {
         return publishDate;
     }
 
-    public void setPublishDate(LocalDateTime publishDate) {
+    public void setPublishDate(Instant publishDate) {
         this.publishDate = publishDate;
     }
 

@@ -13,10 +13,10 @@ public class Event<K, T> {
         DELETE
     }
 
-    private final Type eventType;
-    private final K key;
-    private final T data;
-    private final ZonedDateTime eventCreatedAt;
+    private Type eventType;
+    private K key;
+    private T data;
+    private ZonedDateTime eventCreatedAt;
 
     public Event() {
         this.eventType = null;
@@ -35,16 +35,25 @@ public class Event<K, T> {
     public Type getEventType() {
         return eventType;
     }
+    public void setEventType(Type eventType) {
+        this.eventType = eventType;
+    }
     public K getKey() {
         return key;
+    }
+    public void setKey(K key) {
+        this.key = key;
     }
     public T getData() {
         return data;
     }
-
-    @JsonSerialize(using = ZonedDateTimeSerializer.class)
-    public ZonedDateTime getEventCreatedAt() {
-        return eventCreatedAt;
+    public void setData(T data) {
+        this.data = data;
     }
+    @JsonSerialize(using = ZonedDateTimeSerializer.class)
+    public ZonedDateTime getEventCreatedAt() { return eventCreatedAt; }
 
+    public void setEventCreatedAt(ZonedDateTime eventCreatedAt) { 
+        this.eventCreatedAt = eventCreatedAt; 
+    }
 }

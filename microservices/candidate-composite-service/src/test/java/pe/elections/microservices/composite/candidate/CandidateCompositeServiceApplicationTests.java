@@ -6,7 +6,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static reactor.core.publisher.Mono.just;
 
 import java.time.LocalDateTime;
 
@@ -20,15 +19,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import pe.elections.microservices.api.composite.candidate.CandidateAggregate;
-import pe.elections.microservices.api.composite.candidate.CommentSummary;
-import pe.elections.microservices.api.composite.candidate.NewsArticleSummary;
 import pe.elections.microservices.api.core.candidate.Candidate;
 import pe.elections.microservices.api.core.comment.Comment;
 import pe.elections.microservices.api.core.newsarticle.NewsArticle;
 import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.api.exceptions.NotFoundException;
 import pe.elections.microservices.composite.candidate.services.CandidateCompositeIntegration;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class CandidateCompositeServiceApplicationTests {
@@ -46,42 +44,15 @@ class CandidateCompositeServiceApplicationTests {
     @BeforeEach
     void setup() {
         when(compositeIntegration.getCandidate(CANDIDATE_ID_OK))
-            .thenReturn(new Candidate(CANDIDATE_ID_OK, "nombre del candidato", 35, "mock-address"));
+            .thenReturn(Mono.just(new Candidate(CANDIDATE_ID_OK, "nombre del candidato", 35, "mock-address")));
         when(compositeIntegration.getComments(CANDIDATE_ID_OK))
-            .thenReturn(singletonList(new Comment(CANDIDATE_ID_OK, 1, "contenido del comentario 1", "autor comentario 1", LocalDateTime.now(), "mock address")));
+            .thenReturn(Flux.fromIterable(singletonList(new Comment(CANDIDATE_ID_OK, 1, "contenido del comentario 1", "autor comentario 1", LocalDateTime.now(), "mock address"))));
         when(compositeIntegration.getNewsArticles(CANDIDATE_ID_OK))
-            .thenReturn(singletonList(new NewsArticle(CANDIDATE_ID_OK, 1, "titulo de la noticia 1", "contenido de la noticia 1", "autor de la noticia 1", LocalDateTime.now(), "informativo", "mock address")));
+            .thenReturn(Flux.fromIterable(singletonList(new NewsArticle(CANDIDATE_ID_OK, 1, "titulo de la noticia 1", "contenido de la noticia 1", "autor de la noticia 1", LocalDateTime.now(), "informativo", "mock address"))));
         when(compositeIntegration.getCandidate(CANDIDATE_ID_NOT_FOUND))
             .thenThrow(new NotFoundException("NOT FOUND: " + CANDIDATE_ID_NOT_FOUND));
-
         when(compositeIntegration.getCandidate(CANDIDATE_ID_INVALID))
             .thenThrow(new InvalidInputException("INVALID: " + CANDIDATE_ID_INVALID));
-    }
-
-    @Test
-    void createCompositeCandidate1() {
-        CandidateAggregate compositeCandidate = new CandidateAggregate(1, "name", 30, null, null, null);
-        postAndVerifyCandidate(compositeCandidate, OK);
-    }
-
-    @Test
-    void createCompositeCandidate2() {
-        CandidateAggregate compositeCandidate = new CandidateAggregate(1, "name", 30,
-            singletonList(new CommentSummary(1, "content", "author", LocalDateTime.now())),
-            singletonList(new NewsArticleSummary(1, "title", "content", "author", LocalDateTime.now(), "category")),
-            null);
-        postAndVerifyCandidate(compositeCandidate, OK);
-    }
-
-    @Test
-    void deleteCompositeCandidate() {
-        CandidateAggregate compositeCandidate = new CandidateAggregate(1, "name", 30,
-            singletonList(new CommentSummary(1, "content", "author", LocalDateTime.now())),
-            singletonList(new NewsArticleSummary(1, "title", "content", "author", LocalDateTime.now(), "category")),
-            null);
-        postAndVerifyCandidate(compositeCandidate, OK);
-        deleteAndVerifyCandidate(compositeCandidate.getCandidateId(), OK);
-        deleteAndVerifyCandidate(compositeCandidate.getCandidateId(), OK);
     }
 
     @Test
@@ -113,23 +84,6 @@ class CandidateCompositeServiceApplicationTests {
         .exchange()
         .expectStatus().isEqualTo(expectedStatus)
         .expectHeader().contentType(APPLICATION_JSON)
-        .expectBody();
-    }
-
-    private WebTestClient.BodyContentSpec postAndVerifyCandidate(CandidateAggregate compositeCandidate, HttpStatus expectedStatus) {
-        return client.post()
-        .uri("/candidate-composite")
-        .body(just(compositeCandidate), CandidateAggregate.class)
-        .exchange()
-        .expectStatus().isEqualTo(expectedStatus)
-        .expectBody();
-    }
-
-    private WebTestClient.BodyContentSpec deleteAndVerifyCandidate(int candidateId, HttpStatus expectedStatus) {
-        return client.delete()
-        .uri("/candidate-composite/" + candidateId)
-        .exchange()
-        .expectStatus().isEqualTo(expectedStatus)
         .expectBody();
     }
 

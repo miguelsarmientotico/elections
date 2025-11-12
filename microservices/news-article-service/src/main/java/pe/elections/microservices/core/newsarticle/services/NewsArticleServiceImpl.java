@@ -1,5 +1,7 @@
 package pe.elections.microservices.core.newsarticle.services;
 
+import static java.util.logging.Level.FINE;
+
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -14,6 +16,9 @@ import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.core.newsarticle.persistence.NewsArticleEntity;
 import pe.elections.microservices.core.newsarticle.persistence.NewsArticleRepository;
 import pe.elections.microservices.util.http.ServiceUtil;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 
 @RestController
 public class NewsArticleServiceImpl implements NewsArticleService {
@@ -22,61 +27,73 @@ public class NewsArticleServiceImpl implements NewsArticleService {
     private final NewsArticleRepository repository;
     private final NewsArticleMapper mapper;
 
+    private final Scheduler jdbcScheduler;
+
     @Autowired
     public NewsArticleServiceImpl(
         ServiceUtil serviceUtil,
         NewsArticleRepository repository,
-        NewsArticleMapper mapper
+        NewsArticleMapper mapper,
+        Scheduler jdbcScheduler
     ) {
         this.serviceUtil = serviceUtil;
         this.repository = repository;
         this.mapper = mapper;
+        this.jdbcScheduler = jdbcScheduler;
     }
 
     @Override
-    public NewsArticle createNewsArticle(NewsArticle body) {
-        try {
-            LOG.debug("apicandidateId {}", body.getCandidateId());
-            LOG.debug("apinewsArticleId {}", body.getNewsArticleId());
-            LOG.debug("apititle {}", body.getTitle());
-            LOG.debug("apicontent {}", body.getContent());
-            LOG.debug("apiauthor {}", body.getAuthor());
-            LOG.debug("apipublishDate {}", body.getPublishDate());
-            LOG.debug("apicategory {}", body.getCategory());
-            NewsArticleEntity entity = mapper.apiToEntity(body);
-            LOG.debug("candidateId {}", entity.getCandidateId());
-            LOG.debug("newsArticleId {}", entity.getNewsArticleId());
-            LOG.debug("title {}", entity.getTitle());
-            LOG.debug("content {}", entity.getContent());
-            LOG.debug("author {}", entity.getAuthor());
-            LOG.debug("publishDate {}", entity.getPublishDate());
-            LOG.debug("category {}", entity.getCategory());
-            NewsArticleEntity newEntity = repository.save(entity);
-            LOG.debug("createNewsArticle: created a newsArticle entity: {}/{}", body.getCandidateId(), body.getNewsArticleId());
-            return mapper.entityToApi(newEntity);
-        } catch (DataIntegrityViolationException dive) {
-            throw new InvalidInputException("Duplicate key, Candidate Id: " + body.getCandidateId() + ", NewsArticle Id: " + body.getNewsArticleId());
+    public Mono<NewsArticle> createNewsArticle(NewsArticle body) {
+        if (body.getCandidateId() < 1) {
+            throw new InvalidInputException("Invalid candidateId: " + body.getCandidateId());
         }
+        LOG.info("===MESSAGE SERVICE CREATED FUNCTION===");
+        return Mono.fromCallable(() -> internalCreateNewsArticle(body))
+        .subscribeOn(jdbcScheduler);
     }
 
     @Override
-    public List<NewsArticle> getNewsArticles(int candidateId) {
+    public Flux<NewsArticle> getNewsArticles(int candidateId) {
         LOG.debug("valor: " + candidateId);
         if (candidateId < 1) {
             LOG.debug("valor negativo");
             throw new InvalidInputException("Invalid candidateId: " + candidateId);
         }
+        return Mono.fromCallable(() -> internalGetNewsArticles(candidateId))
+        .flatMapMany(Flux::fromIterable)
+        .log(LOG.getName(), FINE)
+        .subscribeOn(jdbcScheduler);
+    }
+
+    @Override
+    public Mono<Void> deleteNewsArticle(int candidateId) {
+        if (candidateId < 1) {
+            throw new InvalidInputException("Invalid candidateId: " + candidateId);
+        }
+        return Mono.fromRunnable(() -> internalDeleteNewsArticle(candidateId)).subscribeOn(jdbcScheduler).then();
+    }
+
+    private NewsArticle internalCreateNewsArticle(NewsArticle body) {
+        try {
+            LOG.info("Created");
+            NewsArticleEntity entity = mapper.apiToEntity(body);
+            NewsArticleEntity newEntity = repository.save(entity);
+            LOG.info("New entity:" + newEntity.toString());
+            LOG.info("candidateId: " + newEntity.getCandidateId());
+            return mapper.entityToApi(newEntity);
+        } catch (DataIntegrityViolationException dive) {
+            throw new InvalidInputException("Duplicate key, Candidate Id: " + body.getCandidateId() + ", NewsArticle Id: " + body.getNewsArticleId());
+        }
+    }
+    private List<NewsArticle> internalGetNewsArticles(int candidateId) {
         List<NewsArticleEntity> entityList = repository.findByCandidateId(candidateId);
         List<NewsArticle> list = mapper.entityListToApiList(entityList);
         list.forEach(e -> e.setServiceAddress(serviceUtil.getServiceAddress()));
         LOG.debug("getNewsArticle: response size: {}", list.size());
         return list;
     }
-
-    @Override
-    public void deleteNewsArticle(int candidateId) {
+    public void internalDeleteNewsArticle(int candidateId) {
         LOG.debug("deleteNewsArticle: tries to delete newsArticle for the candidate with candidateId: {}", candidateId);
         repository.deleteAll(repository.findByCandidateId(candidateId));
     }
-
 }

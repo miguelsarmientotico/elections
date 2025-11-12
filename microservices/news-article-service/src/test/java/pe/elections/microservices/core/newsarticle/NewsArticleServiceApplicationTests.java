@@ -1,11 +1,12 @@
 package pe.elections.microservices.core.newsarticle;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.ZoneId;
 import java.util.function.Consumer;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -22,9 +23,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import pe.elections.microservices.api.core.newsarticle.NewsArticle;
 import pe.elections.microservices.api.event.Event;
-import pe.elections.microservices.core.newsarticle.persistence.NewsArticleEntity;
+import pe.elections.microservices.api.event.Event.Type;
+import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.core.newsarticle.persistence.NewsArticleRepository;
-import reactor.core.publisher.Mono;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
     "spring.cloud.stream.defaultBinder=rabbit",
@@ -51,9 +52,9 @@ class NewsArticleServiceApplicationTests extends MySqlTestBase {
 	void getNewsArticlesByCandidateId() {
         int candidateId = 1;
         assertEquals(0, repository.findByCandidateId(candidateId).size());
-        postAndVerifyNewsArticle(candidateId, 1, OK);
-        postAndVerifyNewsArticle(candidateId, 2, OK);
-        postAndVerifyNewsArticle(candidateId, 3, OK);
+        sendCreateNewsArticleEvent(candidateId, 1);
+        sendCreateNewsArticleEvent(candidateId, 2);
+        sendCreateNewsArticleEvent(candidateId, 3);
         assertEquals(3, repository.findByCandidateId(candidateId).size());
         getAndVerifyNewsArticleByCandidateId(candidateId, OK)
             .jsonPath("$.length()").isEqualTo(3)
@@ -66,13 +67,14 @@ class NewsArticleServiceApplicationTests extends MySqlTestBase {
         int candidateId = 1;
         int newsArticleId = 1;
         assertEquals(0, repository.count());
-        postAndVerifyNewsArticle(candidateId, newsArticleId, OK)
-            .jsonPath("$.candidateId").isEqualTo(candidateId)
-            .jsonPath("$.newsArticleId").isEqualTo(newsArticleId);
+        sendCreateNewsArticleEvent(candidateId, newsArticleId);
         assertEquals(1, repository.count());
-        postAndVerifyNewsArticle(candidateId, newsArticleId, UNPROCESSABLE_ENTITY)
-            .jsonPath("$.path").isEqualTo("/news-article")
-            .jsonPath("$.message").isEqualTo("Duplicate key, Candidate Id: 1, NewsArticle Id: 1");
+        InvalidInputException thrown = assertThrows(
+            InvalidInputException.class,
+            () -> sendCreateNewsArticleEvent(candidateId, newsArticleId),
+            "Expected a InvalidInputException here!"
+        );
+        assertEquals("Duplicate key, Candidate Id: 1, NewsArticle Id: 1", thrown.getMessage());
         assertEquals(1, repository.count());
     }
 
@@ -80,11 +82,11 @@ class NewsArticleServiceApplicationTests extends MySqlTestBase {
     void deleteNewsArticle() {
         int candidateId = 1;
         int newsArticleId = 1;
-        postAndVerifyNewsArticle(candidateId, newsArticleId, OK);
+        sendCreateNewsArticleEvent(candidateId, newsArticleId);
         assertEquals(1, repository.findByCandidateId(candidateId).size());
-        deleteAndVerifyNewsArticleByCandidateId(candidateId, OK);
+        sendDeleteNewsArticleEvent(candidateId);
         assertEquals(0, repository.findByCandidateId(candidateId).size());
-        deleteAndVerifyNewsArticleByCandidateId(candidateId, OK);
+        sendDeleteNewsArticleEvent(candidateId);
     }
 
     @Test
@@ -129,25 +131,16 @@ class NewsArticleServiceApplicationTests extends MySqlTestBase {
         .expectBody();
     }
 
-    private WebTestClient.BodyContentSpec postAndVerifyNewsArticle(int candidateId, int newsArticleId, HttpStatus expectedStatus) {
-        NewsArticle newsArticle = new NewsArticle(candidateId, newsArticleId, "title " + newsArticleId, "content" + newsArticleId, "author" + newsArticleId, LocalDateTime.now(), "category" + newsArticleId, "SA");
-        return client.post()
-        .uri("/news-article")
-        .body(Mono.just(newsArticle), NewsArticle.class)
-        .accept(APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isEqualTo(expectedStatus)
-        .expectHeader().contentType(APPLICATION_JSON)
-        .expectBody();
+    private void sendCreateNewsArticleEvent(int candidateId, int newsArticleId) {
+        LocalDateTime publishDate = LocalDateTime.of(2024, 1, 15, 14, 30, 0);
+        Instant instant = publishDate.atZone(ZoneId.of("UTC")).toInstant();
+        NewsArticle newsArticle = new NewsArticle(candidateId, newsArticleId, "title " + newsArticleId, "content" + newsArticleId, "author" + newsArticleId, instant, "category" + newsArticleId, "SA");
+        Event<Integer, NewsArticle> event = new Event<Integer, NewsArticle>(Type.CREATE, candidateId, newsArticle);
+        messageProcessor.accept(event);
     }
 
-    private WebTestClient.BodyContentSpec deleteAndVerifyNewsArticleByCandidateId(int candidateId, HttpStatus expectedStatus) {
-        return client.delete()
-        .uri("/news-article?candidateId=" + candidateId)
-        .accept(APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isEqualTo(expectedStatus)
-        .expectBody();
+    private void sendDeleteNewsArticleEvent(int candidateId) {
+        Event<Integer, NewsArticle> event = new Event<Integer, NewsArticle>(Type.DELETE, candidateId, null);
+        messageProcessor.accept(event);
     }
-
 }

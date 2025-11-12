@@ -3,9 +3,10 @@ package pe.elections.microservices.core.newsarticle;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,10 @@ class PersistenceTests extends MySqlTestBase {
 
     private NewsArticleEntity savedEntity; 
 
+    private Instant instant = LocalDateTime.of(2024, 1, 15, 14, 30, 0).atZone(ZoneId.of("UTC")).toInstant();
+
+
+
     @BeforeEach
     void setupDb() {
         repository.deleteAll();
@@ -41,7 +46,7 @@ class PersistenceTests extends MySqlTestBase {
             "titulo del articulo",
             "contenido del articulo",
             "autor del articulo",
-            LocalDateTime.now(),
+            instant,
             "farandula"
         );
         savedEntity = repository.save(entity);
@@ -57,7 +62,7 @@ class PersistenceTests extends MySqlTestBase {
             "a",
             "s",
             "c",
-            LocalDateTime.now(),
+            instant,
             "c"
         );
         repository.save(newEntity);
@@ -100,7 +105,7 @@ class PersistenceTests extends MySqlTestBase {
                 "titulo del articulo",
                 "contenido del articulo",
                 "autor del articulo",
-                LocalDateTime.now(),
+                instant,
                 "farandula"
             );
             repository.save(entity);
@@ -130,7 +135,7 @@ class PersistenceTests extends MySqlTestBase {
         assertEquals(expectedEntity.getAuthor(), actualEntity.getAuthor());
         assertEquals(expectedEntity.getContent(), actualEntity.getContent());
         assertEquals(expectedEntity.getAuthor(), actualEntity.getAuthor());
-        assertEquals(expectedEntity.getPublishDate().withNano(0), actualEntity.getPublishDate().withNano(0));
+        assertEquals(expectedEntity.getPublishDate(), actualEntity.getPublishDate());
         assertEquals(expectedEntity.getCategory(), actualEntity.getCategory());
     }
 }

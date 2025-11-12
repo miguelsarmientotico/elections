@@ -1,13 +1,11 @@
 package pe.elections.microservices.core.comment.services;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.logging.Level;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
 
 import pe.elections.microservices.api.core.comment.Comment;
@@ -16,6 +14,8 @@ import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.core.comment.persistence.CommentEntity;
 import pe.elections.microservices.core.comment.persistence.CommentRepository;
 import pe.elections.microservices.util.http.ServiceUtil;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 public class CommentServiceImpl implements CommentService {
@@ -36,41 +36,43 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public Comment createComment(Comment body) {
-        try {
-            LOG.debug("apicandidateId {}", body.getCandidateId());
-            LOG.debug("apicommentId {}", body.getCommentId());
-            LOG.debug("apicontent {}", body.getContent());
-            LOG.debug("apiauthor {}", body.getAuthor());
-            LOG.debug("apicreatedAt {}", body.getCreatedAt());
-            CommentEntity entity = mapper.apiToEntity(body);
-            LOG.debug("candidateId {}", entity.getCandidateId());
-            LOG.debug("commentId {}", entity.getCommentId());
-            LOG.debug("content {}", entity.getContent());
-            LOG.debug("author {}", entity.getAuthor());
-            LOG.debug("createdAt {}", entity.getCreatedAt());
-            CommentEntity newEntity = repository.save(entity);
-            LOG.debug("createcomment: created a comment entity: {}/{}", body.getCandidateId(), body.getCommentId());
-            return mapper.entityToApi(newEntity);
-        } catch (DataIntegrityViolationException e) {
-            throw new InvalidInputException("Duplicate key, Candidate Id: " + body.getCandidateId() + ", Comment Id: " + body.getCommentId());
+    public Mono<Comment> createComment(Comment body) {
+        if (body.getCandidateId() < 1) {
+            throw new InvalidInputException("Invalid candidateId: " + body.getCandidateId());
         }
+        CommentEntity entity = mapper.apiToEntity(body);
+        Mono<Comment> newEntity = repository.save(entity)
+        .log(LOG.getName(), Level.FINE)
+        .onErrorMap(
+            DuplicateKeyException.class,
+            ex -> new InvalidInputException("Duplicate key, Candidate Id: " + body.getCandidateId() + ", Comment Id: " + body.getCommentId())
+        )
+        .map(e -> mapper.entityToApi(e));
+        return newEntity;
     }
 
     @Override
-    public List<Comment> getComments(int candidateId) {
+    public Flux<Comment> getComments(int candidateId) {
         if (candidateId < 1) {
             throw new InvalidInputException("Invalid candidateId: " + candidateId);
         }
-        List<CommentEntity> entityList = repository.findByCandidateId(candidateId);
-        List<Comment> list = mapper.entityListToApiList(entityList);
-        list.forEach(e -> e.setServiceAddress(serviceUtil.getServiceAddress()));
-        return list;
+        return repository.findByCandidateId(candidateId)
+        .log(LOG.getName(), Level.FINE)
+        .map(e -> mapper.entityToApi(e))
+        .map(e -> setServiceAddress(e));
     }
 
     @Override
-    public void deleteComments(int candidateId) {
-        repository.deleteAll(repository.findByCandidateId(candidateId));
+    public Mono<Void> deleteComments(int candidateId) {
+        if (candidateId < 1) {
+            throw new InvalidInputException("Invalid candidateId: " + candidateId);
+        }
+        return repository.deleteAll(repository.findByCandidateId(candidateId));
+    }
+
+    private Comment setServiceAddress(Comment e) {
+        e.setServiceAddress(serviceUtil.getServiceAddress());
+        return e;
     }
 
 }

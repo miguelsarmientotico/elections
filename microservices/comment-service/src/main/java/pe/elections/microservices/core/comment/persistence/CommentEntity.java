@@ -1,6 +1,6 @@
 package pe.elections.microservices.core.comment.persistence;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -21,7 +21,7 @@ public class CommentEntity {
     private int commentId;
     private String content;
     private String author;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     public CommentEntity() {}
 
@@ -30,7 +30,7 @@ public class CommentEntity {
         int commentId,
         String content,
         String author,
-        LocalDateTime createdAt
+        Instant createdAt
     ) {
         this.candidateId = candidateId;
         this.commentId = commentId;
@@ -63,7 +63,7 @@ public class CommentEntity {
         return author;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
@@ -91,7 +91,7 @@ public class CommentEntity {
         this.author = author;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 

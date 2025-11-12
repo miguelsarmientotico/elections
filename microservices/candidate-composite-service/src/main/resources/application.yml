@@ -1,5 +1,17 @@
 spring.application.name: candidate-composite-service
 
+# En tu application.yml
+spring:
+  cloud:
+    stream:
+      bindings:
+        candidates-out-0:
+          destination: candidates        # ← DESTINATION: "candidates"
+        comments-out-0:
+          destination: comments          # ← DESTINATION: "comments"
+        newsarticles-out-0:
+          destination: newsArticles      # ← DESTINATION: "newsArticles"
+
 springdoc:
   swagger-ui.path: /openapi/swagger-ui.html
   api-docs.path: /openapi/v3/api-docs

@@ -1,5 +1,7 @@
 package pe.elections.microservices.core.candidate.services;
 
+import java.util.logging.Level;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import pe.elections.microservices.api.exceptions.NotFoundException;
 import pe.elections.microservices.core.candidate.persistence.CandidateEntity;
 import pe.elections.microservices.core.candidate.persistence.CandidateRepository;
 import pe.elections.microservices.util.http.ServiceUtil;
+import reactor.core.publisher.Mono;
 
 @RestController
 public class CandidateServiceImpl implements CandidateService {
@@ -33,33 +36,45 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
-    public Candidate createCandidate(Candidate body) {
-        try {
-            CandidateEntity entity = mapper.apiToEntity(body);
-            CandidateEntity newEntity = repository.save(entity);
-            return mapper.entityToApi(newEntity);
-        } catch (DuplicateKeyException dke) {
-            LOG.debug("error duplicate");
-            throw new InvalidInputException("Duplicate key, Candidate Id: " + body.getCandidateId());
+    public Mono<Candidate> createCandidate(Candidate body) {
+        if (body.getCandidateId() < 1) {
+            throw new InvalidInputException("Invalida candidateId: " + body.getCandidateId());
         }
+        CandidateEntity entity = mapper.apiToEntity(body);
+        Mono<Candidate> newEntity = repository.save(entity)
+        .log(LOG.getName(), Level.FINE)
+        .onErrorMap(
+            DuplicateKeyException.class,
+            ex -> new InvalidInputException("Duplicate key, Candidate Id: " + body.getCandidateId())
+        )
+        .map(e -> mapper.entityToApi(e));
+        return newEntity;
     }
 
     @Override
-    public Candidate getCandidate(int candidateId) {
-        LOG.debug("/candidate return the found product for candidateId={}", candidateId);
+    public Mono<Candidate> getCandidate(int candidateId) {
+        LOG.debug("/candidate return the found candidate for candidateId={}", candidateId);
         if (candidateId < 1) {
             throw new InvalidInputException("Invalid candidateId: " + candidateId);
         }
-        CandidateEntity entity = repository.findByCandidateId(candidateId)
-        .orElseThrow(() -> new NotFoundException("No candidate found for candidateId: " + candidateId));
-        Candidate response = mapper.entityToApi(entity);
-        response.setServiceAddress(serviceUtil.getServiceAddress());
-        return response;
+        return repository.findByCandidateId(candidateId)
+        .switchIfEmpty(Mono.error(new NotFoundException("No candidate found for candidateId: " + candidateId)))
+        .log(LOG.getName(), Level.FINE)
+        .map(e -> mapper.entityToApi(e))
+        .map(e -> setServiceAddress(e));
     }
 
     @Override
-    public void deleteCandidate(int candidateId) {
-        repository.findByCandidateId(candidateId).ifPresent(e -> repository.delete(e));
+    public Mono<Void> deleteCandidate(int candidateId) {
+        return repository.findByCandidateId(candidateId)
+        .log(LOG.getName(), Level.FINE)
+        .map(e -> repository.delete(e))
+        .flatMap(e -> e);
+    }
+
+    private Candidate setServiceAddress(Candidate e) {
+        e.setServiceAddress(serviceUtil.getServiceAddress());
+        return e;
     }
 
 }

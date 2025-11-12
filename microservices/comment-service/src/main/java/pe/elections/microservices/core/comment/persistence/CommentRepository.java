@@ -1,9 +1,9 @@
 package pe.elections.microservices.core.comment.persistence;
 
-import java.util.List;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-import org.springframework.data.repository.CrudRepository;
+import reactor.core.publisher.Flux;
 
-public interface CommentRepository extends CrudRepository<CommentEntity, String> {
-    List<CommentEntity> findByCandidateId(int candidateId);
+public interface CommentRepository extends ReactiveCrudRepository<CommentEntity, String> {
+    Flux<CommentEntity> findByCandidateId(int candidateId);
 }

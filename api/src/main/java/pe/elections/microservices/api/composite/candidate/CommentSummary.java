@@ -1,12 +1,12 @@
 package pe.elections.microservices.api.composite.candidate;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class CommentSummary {
     private int commentId;
     private String content;
     private String author;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     // Constructor vacío (OBLIGATORIO para Jackson)
     public CommentSummary() {
@@ -17,7 +17,7 @@ public class CommentSummary {
         int commentId,
         String content,
         String author,
-        LocalDateTime createdAt
+        Instant createdAt
     ) {
         this.commentId = commentId;
         this.content = content;
@@ -50,11 +50,11 @@ public class CommentSummary {
         this.author = author;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 }

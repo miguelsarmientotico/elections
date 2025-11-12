@@ -3,7 +3,9 @@ package pe.elections.microservices.core.newsarticle;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,7 +25,9 @@ class MapperTests {
         System.out.println("Mapper instance: " + mapper);
         System.out.println("Mapper class: " + mapper.getClass());
         assertNotNull(mapper);
-        NewsArticle api = new NewsArticle(1, 2, "a", "b", "c", LocalDateTime.now(), "d", "adr");
+        LocalDateTime publishDate = LocalDateTime.of(2024, 1, 15, 14, 30, 0);
+        Instant instant = publishDate.atZone(ZoneId.of("UTC")).toInstant();
+        NewsArticle api = new NewsArticle(1, 2, "a", "b", "c", instant, "d", "adr");
         NewsArticleEntity entity = mapper.apiToEntity(api);
         assertEquals(api.getCandidateId(), entity.getCandidateId());
         assertEquals(api.getNewsArticleId(), entity.getNewsArticleId());
@@ -48,7 +52,8 @@ class MapperTests {
         assertNotNull(mapper);
 
         LocalDateTime publishDate = LocalDateTime.of(2024, 1, 15, 14, 30, 0);
-        NewsArticle api = new NewsArticle(1, 2, "a", "b", "c", publishDate, "d", "adr");
+        Instant instant = publishDate.atZone(ZoneId.of("UTC")).toInstant();
+        NewsArticle api = new NewsArticle(1, 2, "a", "b", "c", instant, "d", "adr");
         List<NewsArticle> apiList = Collections.singletonList(api);
         List<NewsArticleEntity> entityList = mapper.apiListToEntityList(apiList);
         assertEquals(apiList.size(), entityList.size());

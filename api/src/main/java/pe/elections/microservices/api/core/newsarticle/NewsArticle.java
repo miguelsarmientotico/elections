@@ -1,6 +1,6 @@
 package pe.elections.microservices.api.core.newsarticle;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class NewsArticle {
     private int candidateId;
@@ -8,7 +8,7 @@ public class NewsArticle {
     private String title;
     private String content;
     private String author;
-    private LocalDateTime publishDate;
+    private Instant publishDate;
     private String category;
     private String serviceAddress;
 
@@ -29,7 +29,7 @@ public class NewsArticle {
         String title,
         String content,
         String author,
-        LocalDateTime publishDate,
+        Instant publishDate,
         String category,
         String serviceAddress
     ) {
@@ -83,11 +83,11 @@ public class NewsArticle {
         this.author = author;
     }
 
-    public LocalDateTime getPublishDate() {
+    public Instant getPublishDate() {
         return publishDate;
     }
 
-    public void setPublishDate(LocalDateTime publishDate) {
+    public void setPublishDate(Instant publishDate) {
         this.publishDate = publishDate;
     }
 

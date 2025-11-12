@@ -1,10 +1,5 @@
 package pe.elections.microservices.core.candidate;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,80 +9,94 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 import pe.elections.microservices.core.candidate.persistence.CandidateEntity;
 import pe.elections.microservices.core.candidate.persistence.CandidateRepository;
+import reactor.test.StepVerifier;
 
 @DataMongoTest
 class PersistenceTests extends MongoDbTestBase {
     @Autowired
-    CandidateRepository repository;
+    private CandidateRepository repository;
 
-    CandidateEntity savedEntity;
+    private CandidateEntity savedEntity;
 
     @BeforeEach
     void setupDb() {
-        repository.deleteAll();
+        StepVerifier.create(repository.deleteAll()).verifyComplete();
         CandidateEntity entity = new CandidateEntity(1, "name Candidate", 30);
-        savedEntity = repository.save(entity);
-        assertEqualsCandidate(entity, savedEntity);
+        StepVerifier.create(repository.save(entity))
+            .expectNextMatches(createdEntity -> {
+                savedEntity = createdEntity;
+                return areCandidateEqual(entity, savedEntity);
+            })
+            .verifyComplete();
     }
 
     @Test
     void create() {
         CandidateEntity newEntity = new CandidateEntity(2, "name 2 candidate", 31);
-        repository.save(newEntity);
-        CandidateEntity foundEntity = repository.findById(newEntity.getId()).get();
-        assertEqualsCandidate(newEntity, foundEntity);
-        assertEquals(2, repository.count());
+        StepVerifier.create(repository.save(newEntity))
+            .expectNextMatches(createdEntity -> newEntity.getCandidateId() == createdEntity.getCandidateId())
+            .verifyComplete();
+        StepVerifier.create(repository.findById(newEntity.getId()))
+            .expectNextMatches(foundEntity -> areCandidateEqual(newEntity, foundEntity))
+            .verifyComplete();
+        StepVerifier.create(repository.count()).expectNext(2L).verifyComplete();
     }
 
     @Test
     void update() {
-        savedEntity.setName("c2");
-        repository.save(savedEntity);
-        CandidateEntity foundEntity = repository.findById(savedEntity.getId()).get();
-        assertEquals(1, foundEntity.getVersion());
-        assertEquals("c2", foundEntity.getName());
+        savedEntity.setName("n2");
+        StepVerifier.create(repository.save(savedEntity))
+            .expectNextMatches(updatedEntity -> updatedEntity.getName().equals("n2"))
+            .verifyComplete();
+        StepVerifier.create(repository.findById(savedEntity.getId()))
+            .expectNextMatches(foundEntity ->
+                foundEntity.getVersion() == 1
+                && foundEntity.getName().equals("n2"))
+            .verifyComplete();
     }
 
     @Test
     void delete() {
-        repository.delete(savedEntity);
-        assertFalse(repository.existsById(savedEntity.getId()));
+        StepVerifier.create(repository.delete(savedEntity)).verifyComplete();
+        StepVerifier.create(repository.existsById(savedEntity.getId()))
+            .expectNext(false)
+            .verifyComplete();
     }
 
     @Test
     void getByCandidateId() {
-        Optional<CandidateEntity> entity = repository.findByCandidateId(savedEntity.getCandidateId());
-        assertTrue(entity.isPresent());
-        assertEqualsCandidate(savedEntity, entity.get());
+        StepVerifier.create(repository.findByCandidateId(savedEntity.getCandidateId()))
+            .expectNextMatches(foundEntity -> areCandidateEqual(savedEntity, foundEntity))
+            .verifyComplete();
     }
 
     @Test
     void duplicateError() {
-        assertThrows(DuplicateKeyException.class, () -> {
-            CandidateEntity entity = new CandidateEntity(1, "ca", 29);
-            repository.save(entity);
-        });
+        CandidateEntity entity = new CandidateEntity(savedEntity.getCandidateId(), "name 2 candidate", 31);
+        StepVerifier.create(repository.save(entity)).expectError(DuplicateKeyException.class).verify();
     }
 
     @Test
     void optimisticLockError() {
-        CandidateEntity entity1 = repository.findById(savedEntity.getId()).get();
-        CandidateEntity entity2 = repository.findById(savedEntity.getId()).get();
+        CandidateEntity entity1 = repository.findById(savedEntity.getId()).block();
+        CandidateEntity entity2 = repository.findById(savedEntity.getId()).block();
         entity1.setName("abc");
-        repository.save(entity1);
-        assertThrows(OptimisticLockingFailureException.class, () -> {
-            entity2.setName("zxc");
-            repository.save(entity2);
-        });
-        CandidateEntity updatedEntity = repository.findById(savedEntity.getId()).get();
-        assertEquals(1, (int)updatedEntity.getVersion());
-        assertEquals("abc", updatedEntity.getName());
+        repository.save(entity1).block();
+
+        StepVerifier.create(repository.save(entity2)).expectError(OptimisticLockingFailureException.class).verify();
+        StepVerifier.create(repository.findById(savedEntity.getId()))
+            .expectNextMatches(foundEntity -> 
+                foundEntity.getVersion() == 1
+                && foundEntity.getName().equals("abc")
+            )
+            .verifyComplete();
     }
 
-    private void assertEqualsCandidate(CandidateEntity expectedEntity, CandidateEntity actualEntity) {
-        assertEquals(expectedEntity.getVersion(), actualEntity.getVersion());
-        assertEquals(expectedEntity.getCandidateId(), actualEntity.getCandidateId());
-        assertEquals(expectedEntity.getName(), actualEntity.getName());
-        assertEquals(expectedEntity.getEdad(), actualEntity.getEdad());
+    private boolean areCandidateEqual(CandidateEntity expectedEntity, CandidateEntity actualEntity) {
+        return (expectedEntity.getId().equals(actualEntity.getId()))
+        && (expectedEntity.getVersion() == actualEntity.getVersion())
+        && (expectedEntity.getCandidateId() == actualEntity.getCandidateId())
+        && (expectedEntity.getName().equals(actualEntity.getName()))
+        && (expectedEntity.getEdad() == actualEntity.getEdad());
     }
 }

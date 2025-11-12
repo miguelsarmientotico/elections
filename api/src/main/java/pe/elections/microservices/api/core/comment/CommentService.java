@@ -1,32 +1,23 @@
 package pe.elections.microservices.api.core.comment;
 
-import java.util.List;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface CommentService {
 
-    @PostMapping(
-        value = "/comment",
-        produces = "application/json",
-        consumes = "application/json"
-    )
-    Comment createComment(@RequestBody Comment body);
+    Mono<Comment> createComment(Comment body);
 
     @GetMapping(
         value = "/comment",
         produces = "application/json"
     )
-    List<Comment> getComments(
+    Flux<Comment> getComments(
         @RequestParam(value = "candidateId", required = true) int candidateId
     );
 
-    @DeleteMapping(value = "/comment")
-    void deleteComments(@RequestParam(value = "candidateId", required = true) int candidateId);
+    Mono<Void> deleteComments(int candidateId);
 
 }

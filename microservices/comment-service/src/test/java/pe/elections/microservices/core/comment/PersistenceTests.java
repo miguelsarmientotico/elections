@@ -2,7 +2,9 @@ package pe.elections.microservices.core.comment;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,45 +21,47 @@ import pe.elections.microservices.core.comment.persistence.CommentRepository;
 class PersistenceTests extends MongoDbTestBase {
 
     @Autowired
-    CommentRepository repository;
+    private CommentRepository repository;
 
-    CommentEntity savedEntity;
+    private CommentEntity savedEntity;
+
+    private Instant instant = LocalDateTime.of(2024, 1, 15, 14, 30, 0).atZone(ZoneId.of("UTC")).toInstant();
 
     @BeforeEach
     void setupDb() {
-        repository.deleteAll();
-        CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", LocalDateTime.now());
-        savedEntity = repository.save(entity);
+        repository.deleteAll().block();
+        CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", instant);
+        savedEntity = repository.save(entity).block();
         assertEqualsComment(entity, savedEntity);
     }
 
     @Test
     void create() {
-        CommentEntity newEntity = new CommentEntity(1, 2, "Content comment 2", "author 2", LocalDateTime.now());
-        repository.save(newEntity);
-        CommentEntity foundEntity = repository.findById(newEntity.getId()).get();
+        CommentEntity newEntity = new CommentEntity(1, 2, "Content comment 2", "author 2", instant);
+        repository.save(newEntity).block();
+        CommentEntity foundEntity = repository.findById(newEntity.getId()).block();
         assertEqualsComment(newEntity, foundEntity);
-        assertEquals(2, repository.count());
+        assertEquals(2, repository.count().block());
     }
 
     @Test
     void update() {
         savedEntity.setAuthor("a2");
-        repository.save(savedEntity);
-        CommentEntity foundEntity = repository.findById(savedEntity.getId()).get();
-        assertEquals(1, foundEntity.getVersion());
+        repository.save(savedEntity).block();
+        CommentEntity foundEntity = repository.findById(savedEntity.getId()).block();
+        assertEquals(1, (long)foundEntity.getVersion());
         assertEquals("a2", foundEntity.getAuthor());
     }
 
     @Test
     void delete () {
-        repository.delete(savedEntity);
-        assertFalse(repository.existsById(savedEntity.getId()));
+        repository.delete(savedEntity).block();
+        assertFalse(repository.existsById(savedEntity.getId()).block());
     }
 
     @Test
     void getByCandidateId() {
-        List<CommentEntity> entityList = repository.findByCandidateId(savedEntity.getCandidateId());
+        List<CommentEntity> entityList = repository.findByCandidateId(savedEntity.getCandidateId()).collectList().block();
         assertEquals(1, entityList.size());
         assertEqualsComment(savedEntity, entityList.get(0));
     }
@@ -65,8 +69,8 @@ class PersistenceTests extends MongoDbTestBase {
     @Test
     void duplicateError() {
         assertThrows(DuplicateKeyException.class, () -> {
-            CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", LocalDateTime.now());
-            repository.save(entity);
+            CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", instant);
+            repository.save(entity).block();
         });
     }
 
@@ -75,11 +79,11 @@ class PersistenceTests extends MongoDbTestBase {
         System.out.println("=== DEBUG DUPLICATE ERROR ===");
 
         // 1. Verificar cuántos documentos hay
-        long countBefore = repository.count();
+        long countBefore = repository.count().block();
         System.out.println("Documentos en BD antes: " + countBefore);
 
         // 2. Verificar qué documentos existen
-        Iterable<CommentEntity> allCommentsIterable = repository.findAll();
+        Iterable<CommentEntity> allCommentsIterable = repository.findAll().collectList().block();
         List<CommentEntity> allComments = new ArrayList<>();
         allCommentsIterable.forEach(allComments::add);
         System.out.println("Documentos encontrados:");
@@ -91,10 +95,10 @@ class PersistenceTests extends MongoDbTestBase {
 
         // 3. Intentar crear duplicado
         try {
-            CommentEntity duplicate = new CommentEntity(1, 1, "DUPLICATE CONTENT", "DUPLICATE AUTHOR", LocalDateTime.now());
+            CommentEntity duplicate = new CommentEntity(1, 1, "DUPLICATE CONTENT", "DUPLICATE AUTHOR", instant);
             System.out.println("Intentando guardar duplicado: candidateId=1, commentId=1");
 
-            CommentEntity savedDuplicate = repository.save(duplicate);
+            CommentEntity savedDuplicate = repository.save(duplicate).block();
             System.out.println("¡DUPLICADO GUARDADO EXITOSAMENTE! ID: " + savedDuplicate.getId());
             System.out.println("Esto significa que NO HAY ÍNDICE ÚNICO");
 
@@ -109,16 +113,16 @@ class PersistenceTests extends MongoDbTestBase {
 
     @Test
     void optimisticLockError() {
-        CommentEntity entity1 = repository.findById(savedEntity.getId()).get();
-        CommentEntity entity2 = repository.findById(savedEntity.getId()).get();
+        CommentEntity entity1 = repository.findById(savedEntity.getId()).block();
+        CommentEntity entity2 = repository.findById(savedEntity.getId()).block();
         entity1.setAuthor("a2");
-        repository.save(entity1);
+        repository.save(entity1).block();
 
         assertThrows(OptimisticLockingFailureException.class, () -> {
             entity2.setAuthor("a3");
-            repository.save(entity2);
+            repository.save(entity2).block();
         });
-        CommentEntity updatedEntity = repository.findById(savedEntity.getId()).get();
+        CommentEntity updatedEntity = repository.findById(savedEntity.getId()).block();
         assertEquals(1, (int)updatedEntity.getVersion());
         assertEquals("a2", updatedEntity.getAuthor());
     }
@@ -129,7 +133,7 @@ class PersistenceTests extends MongoDbTestBase {
         assertEquals(expectedEntity.getCommentId(), actualEntity.getCommentId());
         assertEquals(expectedEntity.getContent(), actualEntity.getContent());
         assertEquals(expectedEntity.getAuthor(), actualEntity.getAuthor());
-        assertEquals(expectedEntity.getCreatedAt().withNano(0), actualEntity.getCreatedAt().withNano(0));
+        assertEquals(expectedEntity.getCreatedAt(), actualEntity.getCreatedAt());
     }
 
 }
