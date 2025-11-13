@@ -9,7 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static java.util.Collections.singletonList;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,8 +78,8 @@ class MessagingTests {
     @Test
     void createCompositeCandidate2() {
         CandidateAggregate composite = new CandidateAggregate(1, "name", 30,
-            singletonList(new CommentSummary(1, "a", "b", LocalDateTime.now())),
-            singletonList(new NewsArticleSummary(1, "a", "b", "c", LocalDateTime.now(), "d")),
+            singletonList(new CommentSummary(1, "a", "b", System.currentTimeMillis())),
+            singletonList(new NewsArticleSummary(1, "a", "b", "c", Instant.now(), "d")),
             null);
         postAndVerifyCandidate(composite, ACCEPTED);
         final List<String> candidateMessages = getMessages("candidates");

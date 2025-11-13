@@ -1,12 +1,10 @@
 package pe.elections.microservices.api.composite.candidate;
 
-import java.time.Instant;
-
 public class CommentSummary {
     private int commentId;
     private String content;
     private String author;
-    private Instant createdAt;
+    private Long createdAt;
 
     // Constructor vacío (OBLIGATORIO para Jackson)
     public CommentSummary() {
@@ -17,7 +15,7 @@ public class CommentSummary {
         int commentId,
         String content,
         String author,
-        Instant createdAt
+        Long createdAt
     ) {
         this.commentId = commentId;
         this.content = content;
@@ -50,11 +48,11 @@ public class CommentSummary {
         this.author = author;
     }
 
-    public Instant getCreatedAt() {
+    public Long getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
     }
 }

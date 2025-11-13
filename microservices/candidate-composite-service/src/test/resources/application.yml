@@ -1,0 +1,59 @@
+spring.application.name: candidate-composite-service
+api:
+  common:
+    version: 1.0.0
+    title: Sample API
+    description: Description of the API...
+    termsOfService: MY TERMS OF SERVICE
+    license: License Candidate
+    licenseUrl: License Candidate URL
+    externalDocDesc: Pagina Wiki
+    externalDocUrl: Pagina Wiki URL
+    contact:
+      name: Name contact
+      url: URL contact
+      email: sarmientomiguel3@gmail.com
+  responseCodes:
+    ok.description: OK
+    badRequest.description: Bad Request, invalid format of the request. See response message for more information
+    notFound.description: Not Found, the specific id does not exist
+    unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message form more information
+  candidate-composite:
+    get-composite-candidate:
+      description: Return a composite view of the specified candidate id
+      notes: |
+        # Normal response
+        Returns the candidate information along with related comments and news articles
+
+spring:
+  cloud:
+    stream:
+      bindings:
+        candidates-out-0:
+          destination: candidates        # ← DESTINATION: "candidates"
+        comments-out-0:
+          destination: comments          # ← DESTINATION: "comments"
+        newsarticles-out-0:
+          destination: newsArticles      # ← DESTINATION: "newsArticles"
+
+app:
+  candidate-service:
+    host: localhost
+    port: 7001
+  comment-service:
+    host: localhost
+    port: 7002
+  news-article-service:
+    host: localhost
+    port: 7003
+
+logging:
+  level:
+    root: INFO
+    pe.elections.microservices: DEBUG
+    org.springframework: DEBUG
+    org.springframework.boot: DEBUG
+    org.springframework.cloud.stream: DEBUG
+    org.springframework.data.mongodb: DEBUG
+
+server.error.include-message: always

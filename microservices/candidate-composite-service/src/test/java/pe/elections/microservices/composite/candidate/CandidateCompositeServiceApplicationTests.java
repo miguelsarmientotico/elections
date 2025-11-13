@@ -7,6 +7,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import static java.util.Collections.singletonList;
@@ -46,9 +47,9 @@ class CandidateCompositeServiceApplicationTests {
         when(compositeIntegration.getCandidate(CANDIDATE_ID_OK))
             .thenReturn(Mono.just(new Candidate(CANDIDATE_ID_OK, "nombre del candidato", 35, "mock-address")));
         when(compositeIntegration.getComments(CANDIDATE_ID_OK))
-            .thenReturn(Flux.fromIterable(singletonList(new Comment(CANDIDATE_ID_OK, 1, "contenido del comentario 1", "autor comentario 1", LocalDateTime.now(), "mock address"))));
+            .thenReturn(Flux.fromIterable(singletonList(new Comment(CANDIDATE_ID_OK, 1, "contenido del comentario 1", "autor comentario 1", System.currentTimeMillis(), "mock address"))));
         when(compositeIntegration.getNewsArticles(CANDIDATE_ID_OK))
-            .thenReturn(Flux.fromIterable(singletonList(new NewsArticle(CANDIDATE_ID_OK, 1, "titulo de la noticia 1", "contenido de la noticia 1", "autor de la noticia 1", LocalDateTime.now(), "informativo", "mock address"))));
+            .thenReturn(Flux.fromIterable(singletonList(new NewsArticle(CANDIDATE_ID_OK, 1, "titulo de la noticia 1", "contenido de la noticia 1", "autor de la noticia 1", Instant.now(), "informativo", "mock address"))));
         when(compositeIntegration.getCandidate(CANDIDATE_ID_NOT_FOUND))
             .thenThrow(new NotFoundException("NOT FOUND: " + CANDIDATE_ID_NOT_FOUND));
         when(compositeIntegration.getCandidate(CANDIDATE_ID_INVALID))

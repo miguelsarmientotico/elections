@@ -26,13 +26,16 @@ public class MessageProcessorConfig {
 
     @Bean
     public Consumer<Event<Integer, Comment>> messageProcessor() {
+        LOG.warn("entra el messageProcessor");
         return event -> {
             switch (event.getEventType()) {
                 case CREATE:
+                    LOG.debug("crear comment");
                     Comment comment = event.getData();
                     commentService.createComment(comment).block();
                     break;
                 case DELETE:
+                    LOG.debug("delete comment");
                     int candidateId = event.getKey();
                     commentService.deleteComments(candidateId).block();
                     break;

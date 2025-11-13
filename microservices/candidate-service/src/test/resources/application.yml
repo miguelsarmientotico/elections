@@ -1,0 +1,10 @@
+logging:
+  level:
+    root: INFO
+    pe.elections.microservices: DEBUG
+    org.springframework: DEBUG
+    org.springframework.boot: DEBUG
+    org.springframework.cloud.stream: DEBUG
+    org.springframework.data.mongodb: DEBUG
+
+server.error.include-message: always

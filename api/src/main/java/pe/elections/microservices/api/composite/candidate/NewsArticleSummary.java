@@ -1,13 +1,13 @@
 package pe.elections.microservices.api.composite.candidate;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class NewsArticleSummary {
     private int newsArticleId;
     private String title;
     private String content;
     private String author;
-    private LocalDateTime publishDate;
+    private Instant publishDate;
     private String category;
 
     // Constructor vacío (OBLIGATORIO para Jackson)
@@ -20,7 +20,7 @@ public class NewsArticleSummary {
         String title,
         String content,
         String author,
-        LocalDateTime publishDate,
+        Instant publishDate,
         String category
     ) {
         this.newsArticleId = newsArticleId;
@@ -64,11 +64,11 @@ public class NewsArticleSummary {
         this.author = author;
     }
 
-    public LocalDateTime getPublishDate() {
+    public Instant getPublishDate() {
         return publishDate;
     }
 
-    public void setPublishDate(LocalDateTime publishDate) {
+    public void setPublishDate(Instant publishDate) {
         this.publishDate = publishDate;
     }
 

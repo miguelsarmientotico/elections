@@ -1,13 +1,11 @@
 package pe.elections.microservices.api.core.comment;
 
-import java.time.Instant;
-
 public class Comment {
     private int candidateId;
     private int commentId;
     private String content;
     private String author;
-    private Instant createdAt;
+    private Long createdAt;
     private String serviceAddress;
 
     public Comment() {
@@ -24,7 +22,7 @@ public class Comment {
         int commentId,
         String content,
         String author,
-        Instant createdAt,
+        Long createdAt,
         String serviceAddress
     ) {
         this.candidateId = candidateId;
@@ -67,11 +65,11 @@ public class Comment {
         this.author = author;
     }
 
-    public Instant getCreatedAt() {
+    public Long getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
     }
 

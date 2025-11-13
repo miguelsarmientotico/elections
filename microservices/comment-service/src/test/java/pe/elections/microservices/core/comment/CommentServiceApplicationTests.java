@@ -9,9 +9,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static pe.elections.microservices.api.event.Event.Type.CREATE;
 import static pe.elections.microservices.api.event.Event.Type.DELETE;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -128,12 +125,19 @@ class CommentServiceApplicationTests extends MongoDbTestBase {
         .exchange()
         .expectStatus().isEqualTo(expectedStatus)
         .expectHeader().contentType(APPLICATION_JSON)
-        .expectBody();
+        .expectBody()
+        .consumeWith(result -> {
+            String responseBody = new String(result.getResponseBody());
+            System.out.println("=== ACTUAL RESPONSE ===");
+            System.out.println("/comment" + candidateIdQuery);
+            System.out.println(responseBody);
+            System.out.println("=== END RESPONSE ===");
+        });
     }
 
     private void sendCreateCommentEvent(int candidateId, int commentId) {
-        Instant instant = LocalDateTime.of(2024, 1, 15, 14, 30, 0).atZone(ZoneId.of("UTC")).toInstant();
-        Comment newComment = new Comment(candidateId, commentId, "afsd", "adfa", instant, "adr");
+
+        Comment newComment = new Comment(candidateId, commentId, "afsd", "adfa", System.currentTimeMillis(), "adr");
         Event<Integer, Comment> event = new Event<>(CREATE, candidateId, newComment);
         messageProcessor.accept(event);
     }

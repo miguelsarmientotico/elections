@@ -14,13 +14,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import pe.elections.microservices.api.event.Event;
 
 public class IsSameEvent extends TypeSafeMatcher<String> {
     private static final Logger LOG = LoggerFactory.getLogger(IsSameEvent.class);
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = createConfiguredObjectMapper();
     private Event<?, ?> expectedEvent;
+
+    private ObjectMapper createConfiguredObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
 
     private IsSameEvent(Event<?, ?> expectedEvent) {
         this.expectedEvent = expectedEvent;

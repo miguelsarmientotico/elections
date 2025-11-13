@@ -25,19 +25,19 @@ class PersistenceTests extends MongoDbTestBase {
 
     private CommentEntity savedEntity;
 
-    private Instant instant = LocalDateTime.of(2024, 1, 15, 14, 30, 0).atZone(ZoneId.of("UTC")).toInstant();
+    private final Long dateNow = System.currentTimeMillis();
 
     @BeforeEach
     void setupDb() {
         repository.deleteAll().block();
-        CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", instant);
+        CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", dateNow);
         savedEntity = repository.save(entity).block();
         assertEqualsComment(entity, savedEntity);
     }
 
     @Test
     void create() {
-        CommentEntity newEntity = new CommentEntity(1, 2, "Content comment 2", "author 2", instant);
+        CommentEntity newEntity = new CommentEntity(1, 2, "Content comment 2", "author 2", dateNow);
         repository.save(newEntity).block();
         CommentEntity foundEntity = repository.findById(newEntity.getId()).block();
         assertEqualsComment(newEntity, foundEntity);
@@ -69,7 +69,7 @@ class PersistenceTests extends MongoDbTestBase {
     @Test
     void duplicateError() {
         assertThrows(DuplicateKeyException.class, () -> {
-            CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", instant);
+            CommentEntity entity = new CommentEntity(1, 1, "Content Comment", "Author Comment", dateNow);
             repository.save(entity).block();
         });
     }
@@ -95,7 +95,7 @@ class PersistenceTests extends MongoDbTestBase {
 
         // 3. Intentar crear duplicado
         try {
-            CommentEntity duplicate = new CommentEntity(1, 1, "DUPLICATE CONTENT", "DUPLICATE AUTHOR", instant);
+            CommentEntity duplicate = new CommentEntity(1, 1, "DUPLICATE CONTENT", "DUPLICATE AUTHOR", dateNow);
             System.out.println("Intentando guardar duplicado: candidateId=1, commentId=1");
 
             CommentEntity savedDuplicate = repository.save(duplicate).block();

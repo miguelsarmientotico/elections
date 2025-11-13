@@ -1,7 +1,5 @@
 package pe.elections.microservices.core.comment.persistence;
 
-import java.time.Instant;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -21,7 +19,7 @@ public class CommentEntity {
     private int commentId;
     private String content;
     private String author;
-    private Instant createdAt;
+    private Long createdAt;
 
     public CommentEntity() {}
 
@@ -30,7 +28,7 @@ public class CommentEntity {
         int commentId,
         String content,
         String author,
-        Instant createdAt
+        Long createdAt
     ) {
         this.candidateId = candidateId;
         this.commentId = commentId;
@@ -63,7 +61,7 @@ public class CommentEntity {
         return author;
     }
 
-    public Instant getCreatedAt() {
+    public Long getCreatedAt() {
         return createdAt;
     }
 
@@ -91,7 +89,7 @@ public class CommentEntity {
         this.author = author;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
     }
 

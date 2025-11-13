@@ -3,9 +3,6 @@ package pe.elections.microservices.core.comment;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,8 +19,7 @@ class MapperTests {
     @Test
     void mapperTests() {
         assertNotNull(mapper);
-        Instant instant = LocalDateTime.of(2024, 1, 15, 14, 30, 0).atZone(ZoneId.of("UTC")).toInstant();
-        Comment api = new Comment(1, 2, "Content comment", "Author comment", instant, "adr");
+        Comment api = new Comment(1, 2, "Content comment", "Author comment", System.currentTimeMillis(), "adr");
         CommentEntity entity = mapper.apiToEntity(api);
         assertEquals(api.getCandidateId(), entity.getCandidateId());
         assertEquals(api.getCommentId(), entity.getCommentId());
@@ -42,8 +38,7 @@ class MapperTests {
     @Test
     void mapperListTests() {
         assertNotNull(mapper);
-        Instant instant = LocalDateTime.of(2024, 1, 15, 14, 30, 0).atZone(ZoneId.of("UTC")).toInstant();
-        Comment api = new Comment(1, 2, "Content comment", "Author comment", instant, "adr");
+        Comment api = new Comment(1, 2, "Content comment", "Author comment", System.currentTimeMillis(), "adr");
         List<Comment> apiList = Collections.singletonList(api);
         List<CommentEntity> entityList = mapper.apiListToEntityList(apiList);
         assertEquals(apiList.size(), entityList.size());
