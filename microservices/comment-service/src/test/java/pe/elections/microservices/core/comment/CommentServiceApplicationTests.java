@@ -24,7 +24,10 @@ import pe.elections.microservices.api.event.Event;
 import pe.elections.microservices.api.exceptions.InvalidInputException;
 import pe.elections.microservices.core.comment.persistence.CommentRepository;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
+    "spring.cloud.stream.defaultBinder=rabbit",
+    "logging.level.pe.elections.microservices=DEBUG"
+})
 class CommentServiceApplicationTests extends MongoDbTestBase {
 
     @Autowired

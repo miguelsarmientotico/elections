@@ -18,7 +18,6 @@ import pe.elections.microservices.api.composite.candidate.ServiceAddresses;
 import pe.elections.microservices.api.core.candidate.Candidate;
 import pe.elections.microservices.api.core.comment.Comment;
 import pe.elections.microservices.api.core.newsarticle.NewsArticle;
-import pe.elections.microservices.api.exceptions.NotFoundException;
 import pe.elections.microservices.util.http.ServiceUtil;
 import reactor.core.publisher.Mono;
 
@@ -117,7 +116,7 @@ public class CandidateCompositeServiceImpl implements CandidateCompositeService 
             (comments == null)
                 ? null
                 : comments.stream()
-                    .map(c -> new CommentSummary(c.getCandidateId(), c.getContent(), c.getAuthor(), c.getCreatedAt()))
+                    .map(c -> new CommentSummary(c.getCommentId(), c.getContent(), c.getAuthor(), c.getCreatedAt()))
                     .collect(Collectors.toList());
         List<NewsArticleSummary> newsArticleSummaries =
             (newsArticles == null)

@@ -69,9 +69,9 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
         this.streamBridge = streamBridge;
         this.webClient = webClient.build();
         this.mapper = mapper;
-        candidateServiceUrl = "http://" + candidateServiceHost + ":" + candidateServicePort + "/candidate";
-        commentServiceUrl = "http://" + commentServiceHost + ":" + commentServicePort + "/comment";
-        newsArticleServiceUrl = "http://" + newsArticleServiceHost + ":" + newsArticleServicePort + "/news-article";
+        candidateServiceUrl = "http://" + candidateServiceHost + ":" + candidateServicePort;
+        commentServiceUrl = "http://" + commentServiceHost + ":" + commentServicePort;
+        newsArticleServiceUrl = "http://" + newsArticleServiceHost + ":" + newsArticleServicePort;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     @Override
     public Mono<Candidate> getCandidate(int candidateId) {
-        String url = candidateServiceUrl + "/" + candidateId;
+        String url = candidateServiceUrl + "/candidate/" + candidateId;
         return webClient.get()
         .uri(url)
         .retrieve()
@@ -112,7 +112,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     @Override
     public Flux<Comment> getComments(int candidateId) {
-        String url = commentServiceUrl + "?candidateId=" + candidateId;
+        String url = commentServiceUrl + "/comment?candidateId=" + candidateId;
         return webClient.get()
         .uri(url)
         .retrieve()
@@ -141,7 +141,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     @Override
     public Flux<NewsArticle> getNewsArticles(int candidateId) {
-        String url = newsArticleServiceUrl + "?candidateId=" + candidateId;
+        String url = newsArticleServiceUrl + "/news-article?candidateId=" + candidateId;
         return webClient.get()
         .uri(url)
         .retrieve()
@@ -161,14 +161,17 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
     }
 
     public Mono<Health> getCandidateHealth() {
+        LOG.debug("candidate url:" + candidateServiceUrl);
         return getHealth(candidateServiceUrl);
     }
 
     public Mono<Health> getCommentHealth() {
+        LOG.debug("comment url:" + candidateServiceUrl);
         return getHealth(commentServiceUrl);
     }
 
     public Mono<Health> getNewsArticleHealth() {
+        LOG.debug("newsArticle url:" + candidateServiceUrl);
         return getHealth(newsArticleServiceUrl);
     }
 

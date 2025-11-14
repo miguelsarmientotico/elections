@@ -28,7 +28,7 @@ public class MongoDBIndexConfig {
         MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate.getConverter().getMappingContext();
         IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
         ReactiveIndexOperations indexOps = mongoTemplate.indexOps(CandidateEntity.class);
-        resolver.resolveIndexFor(CandidateEntity.class).forEach(e -> indexOps.ensureIndex(e).block());
+        resolver.resolveIndexFor(CandidateEntity.class).forEach(e -> indexOps.createIndex(e).block());
     }
 
 }

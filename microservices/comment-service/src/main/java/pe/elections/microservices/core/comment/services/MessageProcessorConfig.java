@@ -26,7 +26,7 @@ public class MessageProcessorConfig {
 
     @Bean
     public Consumer<Event<Integer, Comment>> messageProcessor() {
-        LOG.warn("entra el messageProcessor");
+        LOG.info("entra el messageProcessor");
         return event -> {
             switch (event.getEventType()) {
                 case CREATE:

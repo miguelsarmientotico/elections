@@ -34,7 +34,7 @@ spring:
         comments-out-0:
           destination: comments          # ← DESTINATION: "comments"
         newsarticles-out-0:
-          destination: newsArticles      # ← DESTINATION: "newsArticles"
+          destination: newsarticles      # ← DESTINATION: "newsArticles"
 
 app:
   candidate-service:

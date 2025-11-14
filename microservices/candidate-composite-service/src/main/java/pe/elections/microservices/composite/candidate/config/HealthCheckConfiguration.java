@@ -21,9 +21,9 @@ public class HealthCheckConfiguration {
     @Bean
     ReactiveHealthContributor coreServies() {
         final Map<String, ReactiveHealthIndicator> registry = new LinkedHashMap<>();
-        //registry.put("candidate", () -> integration.getCandidateHealth());
-        //registry.put("comment", () -> integration.getCommentHealth());
-        //registry.put("news-article", () -> integration.getNewsArticleHealth());
+        registry.put("candidate", () -> integration.getCandidateHealth());
+        registry.put("comment", () -> integration.getCommentHealth());
+        registry.put("newsarticle", () -> integration.getNewsArticleHealth());
         return CompositeReactiveHealthContributor.fromMap(registry);
     }
 }

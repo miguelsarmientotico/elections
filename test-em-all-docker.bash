@@ -74,12 +74,56 @@ function waitForService() {
   echo "DONE, continues..."
 }
 
+function testCompositeCreated() {
+
+    # Expect that the Product Composite for productId $PROD_ID_REVS_RECS has been created with three recommendations and three reviews
+    if ! assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
+    then
+        echo -n "FAIL"
+        return 1
+    fi
+
+    set +e
+    assertEqual "$CAND_ID_CMTS_NEWS" $(echo $RESPONSE | jq .candidateId)
+    if [ "$?" -eq "1" ] ; then return 1; fi
+
+    assertEqual 3 $(echo $RESPONSE | jq ".comments | length")
+    if [ "$?" -eq "1" ] ; then return 1; fi
+
+    assertEqual 3 $(echo $RESPONSE | jq ".newsArticles | length")
+    if [ "$?" -eq "1" ] ; then return 1; fi
+
+    set -e
+}
+
+function waitForMessageProcessing() {
+    echo "Wait for messages to be processed... "
+
+    # Give background processing some time to complete...
+    sleep 1
+
+    n=0
+    until testCompositeCreated
+    do
+        n=$((n + 1))
+        if [[ $n == 40 ]]
+        then
+            echo " Give up"
+            exit 1
+        else
+            sleep 6
+            echo -n ", retry #$n "
+        fi
+    done
+    echo "All messages are now processed!"
+}
+
 function recreateComposite() {
   local candidateId=$1
   local composite=$2
 
-  assertCurl 200 "curl -X DELETE http://$HOST:$PORT/candidate-composite/${candidateId} -s"
-  curl -X POST http://$HOST:$PORT/candidate-composite -H "Content-Type: application/json" --data "$composite"
+  assertCurl 202 "curl -X DELETE http://$HOST:$PORT/candidate-composite/${candidateId} -s"
+  assertEqual 202 $(curl -X POST -s http://$HOST:$PORT/candidate-composite -H "Content-Type: application/json" --data "$composite" -w "%{http_code}")
 }
 
 function setupTestdata() {
@@ -87,18 +131,18 @@ function setupTestdata() {
   body="{\"candidateId\":$CAND_ID_NOT_CMTS"
   body+=\
 ',"name":"candidate name A","edad":30, "newsArticles":[
-  {"newsArticleId":1,"title":"Title 1","content":"Content 1","author":"Author 1","publishDate":"2024-01-15T10:00:00","category":"Politics"},
-  {"newsArticleId":2,"title":"Title 2","content":"Content 2","author":"Author 2","publishDate":"2024-01-16T11:30:00","category":"Economy"},
-  {"newsArticleId":3,"title":"Title 3","content":"Content 3","author":"Author 3","publishDate":"2024-01-17T14:45:00","category":"Technology"}
+  {"newsArticleId":1,"title":"Title 1","content":"Content 1","author":"Author 1","publishDate":"2024-06-01T10:00:00Z","category":"Politics"},
+  {"newsArticleId":2,"title":"Title 2","content":"Content 2","author":"Author 2","publishDate":"2024-06-01T10:00:00Z","category":"Economy"},
+  {"newsArticleId":3,"title":"Title 3","content":"Content 3","author":"Author 3","publishDate":"2024-06-01T10:00:00Z","category":"Technology"}
 ]}'
   recreateComposite "$CAND_ID_NOT_CMTS" "$body"
 
   body="{\"candidateId\":$CAND_ID_NOT_NEWS"
   body+=\
 ',"name":"candidate name B","edad":29, "comments":[
-  {"commentId":1,"content":"Excellent candidate","author":"Voter A","createdAt":"2024-01-18T08:00:00"},
-  {"commentId":2,"content":"Fully supported","author":"Voter B","createdAt":"2024-01-18T09:15:00"},
-  {"commentId":3,"content":"Great proposals","author":"Voter C","createdAt":"2024-01-18T10:30:00"}
+  {"commentId":1,"content":"Excellent candidate","author":"Voter A","createdAt":"1717200000000"},
+  {"commentId":2,"content":"Fully supported","author":"Voter B","createdAt":"1717200000000"},
+  {"commentId":3,"content":"Great proposals","author":"Voter C","createdAt":"1717200000000"}
 ]}'
   recreateComposite "$CAND_ID_NOT_NEWS" "$body"
 
@@ -106,13 +150,13 @@ function setupTestdata() {
   body="{\"candidateId\":$CAND_ID_CMTS_NEWS"
   body+=\
 ',"name":"candidate name C","edad":31, "comments":[
-  {"commentId":1,"content":"Excellent candidate","author":"Voter A","createdAt":"2024-01-18T08:00:00"},
-  {"commentId":2,"content":"Fully supported","author":"Voter B","createdAt":"2024-01-18T09:15:00"},
-  {"commentId":3,"content":"Great proposals","author":"Voter C","createdAt":"2024-01-18T10:30:00"}
+  {"commentId":1,"content":"Excellent candidate","author":"Voter A","createdAt":"1717200000000"},
+  {"commentId":2,"content":"Fully supported","author":"Voter B","createdAt":"1717200000000"},
+  {"commentId":3,"content":"Great proposals","author":"Voter C","createdAt":"1717200000000"}
   ], "newsArticles":[
-  {"newsArticleId":1,"title":"Title 1","content":"Content 1","author":"Author 1","publishDate":"2024-01-15T10:00:00","category":"Politics"},
-  {"newsArticleId":2,"title":"Title 2","content":"Content 2","author":"Author 2","publishDate":"2024-01-16T11:30:00","category":"Economy"},
-  {"newsArticleId":3,"title":"Title 3","content":"Content 3","author":"Author 3","publishDate":"2024-01-17T14:45:00","category":"Technology"}
+  {"newsArticleId":1,"title":"Title 1","content":"Content 1","author":"Author 1","publishDate":"2024-06-01T10:00:00Z","category":"Politics"},
+  {"newsArticleId":2,"title":"Title 2","content":"Content 2","author":"Author 2","publishDate":"2024-06-01T10:00:00Z","category":"Economy"},
+  {"newsArticleId":3,"title":"Title 3","content":"Content 3","author":"Author 3","publishDate":"2024-06-01T10:00:00Z","category":"Technology"}
   ]}'
   recreateComposite "$CAND_ID_CMTS_NEWS" "$body"
 
@@ -134,10 +178,14 @@ then
   docker compose up -d --build
 fi
 
-waitForService curl -X DELETE http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_FOUND
-
+waitForService curl http://$HOST:$PORT/actuator/health
+echo "test setupTestdata"
 setupTestdata
 
+echo "test message"
+waitForMessageProcessing
+
+echo "init asserts"
 assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
 assertEqual $CAND_ID_CMTS_NEWS $(echo $RESPONSE | jq .candidateId)
 assertEqual 3 $(echo $RESPONSE | jq ".comments | length")

@@ -2,7 +2,20 @@ services:
   candidate:
     build: microservices/candidate-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  candidate-p1:
+    build: microservices/candidate-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1
     deploy:
       resources:
         limits:
@@ -15,7 +28,20 @@ services:
   comment:
     build: microservices/comment-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  comment-p1:
+    build: microservices/comment-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1
     deploy:
       resources:
         limits:
@@ -28,7 +54,20 @@ services:
   news-article:
     build: microservices/news-article-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  news-article-p1:
+    build: microservices/news-article-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1
     deploy:
       resources:
         limits:
@@ -44,7 +83,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned
     deploy:
       resources:
         limits:

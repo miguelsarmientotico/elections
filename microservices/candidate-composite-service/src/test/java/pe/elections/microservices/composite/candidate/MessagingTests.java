@@ -54,7 +54,7 @@ class MessagingTests {
     void setup() {
         purgeMessage("candidates");
         purgeMessage("comments");
-        purgeMessage("newsArticles");
+        purgeMessage("newsarticles");
     }
 
     @Test
@@ -63,7 +63,7 @@ class MessagingTests {
         postAndVerifyCandidate(composite, HttpStatus.ACCEPTED);
         final List<String> candidateMessages = getMessages("candidates");
         final List<String> commentMessages = getMessages("comments");
-        final List<String> newsArticleMessages = getMessages("newsArticles");
+        final List<String> newsArticleMessages = getMessages("newsarticles");
         assertEquals(1, candidateMessages.size());
         Event<Integer, Candidate> expectedEvent = new Event<Integer, Candidate>(
             Type.CREATE,
@@ -84,7 +84,7 @@ class MessagingTests {
         postAndVerifyCandidate(composite, ACCEPTED);
         final List<String> candidateMessages = getMessages("candidates");
         final List<String> commentMessages = getMessages("comments");
-        final List<String> newsArticleMessages = getMessages("newsArticles");
+        final List<String> newsArticleMessages = getMessages("newsarticles");
         assertEquals(1, candidateMessages.size());
         Event<Integer, Candidate> expectedCandidateEvent = new Event<Integer, Candidate>(
             Type.CREATE,
@@ -115,7 +115,7 @@ class MessagingTests {
         deleteAndVerifyCandidate(1, ACCEPTED);
         final List<String> candidateMessages = getMessages("candidates");
         final List<String> commentMessages = getMessages("comments");
-        final List<String> newsArticleMessages = getMessages("newsArticles");
+        final List<String> newsArticleMessages = getMessages("newsarticles");
         assertEquals(1, candidateMessages.size());
         Event<Integer, Candidate> expectedCandidateEvent = new Event<Integer,Candidate>(Type.DELETE, 1, null);
         assertThat(candidateMessages.get(0), is(sameEventExceptCreatedAt(expectedCandidateEvent)));
