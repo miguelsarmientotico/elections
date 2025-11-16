@@ -27,7 +27,8 @@ import pe.elections.microservices.core.candidate.persistence.CandidateRepository
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
     "spring.cloud.stream.defaultBinder=rabbit",
-    "logging.level.pe.elections.microservices=DEBUG"
+    "logging.level.pe.elections.microservices=DEBUG",
+    "eureka.client.enabled=false"
 })
 class CandidateServiceApplicationTests extends MongoDbTestBase {
 

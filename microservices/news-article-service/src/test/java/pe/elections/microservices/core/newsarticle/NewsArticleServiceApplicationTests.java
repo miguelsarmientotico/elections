@@ -29,7 +29,8 @@ import pe.elections.microservices.core.newsarticle.persistence.NewsArticleReposi
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
     "spring.cloud.stream.defaultBinder=rabbit",
-    "logging.level.pe.elections.microservices=DEBUG"
+    "logging.level.pe.elections.microservices=DEBUG",
+    "eureka.client.enabled=false"
 })
 class NewsArticleServiceApplicationTests extends MySqlTestBase {
     

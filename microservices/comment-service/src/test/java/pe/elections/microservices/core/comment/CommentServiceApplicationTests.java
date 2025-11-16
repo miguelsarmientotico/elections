@@ -26,7 +26,8 @@ import pe.elections.microservices.core.comment.persistence.CommentRepository;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
     "spring.cloud.stream.defaultBinder=rabbit",
-    "logging.level.pe.elections.microservices=DEBUG"
+    "logging.level.pe.elections.microservices=DEBUG",
+    "eureka.client.enabled=false"
 })
 class CommentServiceApplicationTests extends MongoDbTestBase {
 

@@ -36,16 +36,20 @@ api:
 server.port: 7000
 server.error.include-message: always
 
-app:
-  candidate-service:
-    host: localhost
-    port: 7001
-  comment-service:
-    host: localhost
-    port: 7002
-  newsarticle-service:
-    host: localhost
-    port: 7003
+spring.application.name: candidate-composite
+
+app.eureka-server: localhost
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${app.eureka-server}:8761/eureka/
+    initialInstanceInfoReplicationIntervalSeconds: 5
+    registryFetchIntervalSeconds: 5
+  instance:
+    leaseRenewalIntervalInSeconds: 5
+    leaseExpirationDurationInSeconds: 5
+
 
 spring.cloud.stream:
   defaultBinder: rabbit
@@ -86,16 +90,7 @@ spring.config.activate.on-profile: docker
 
 server.port: 8080
 
-app:
-  candidate-service:
-    host: candidate
-    port: 8080
-  comment-service:
-    host: comment
-    port: 8080
-  newsarticle-service:
-    host: news-article
-    port: 8080
+app.eureka-server: eureka
 
 spring.rabbitmq.host: rabbitmq
 

@@ -43,9 +43,9 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
     private final WebClient webClient;
     private final ObjectMapper mapper;
 
-    private final String candidateServiceUrl;
-    private final String commentServiceUrl;
-    private final String newsArticleServiceUrl;
+    private static final String CANDIDATE_SERVICE_URL = "http://candidate";
+    private static final String COMMENT_SERVICE_URL = "http://comment";
+    private static final String NEWSARTICLE_SERVICE_URL = "http://newsarticle";
 
     private final StreamBridge streamBridge;
 
@@ -57,21 +57,12 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
         Scheduler publishEventScheduler,
         StreamBridge streamBridge,
         WebClient.Builder webClient,
-        ObjectMapper mapper,
-        @Value("${app.candidate-service.host}") String candidateServiceHost,
-        @Value("${app.candidate-service.port}") String candidateServicePort,
-        @Value("${app.comment-service.host}") String commentServiceHost,
-        @Value("${app.comment-service.port}") String commentServicePort,
-        @Value("${app.newsarticle-service.host}") String newsArticleServiceHost,
-        @Value("${app.newsarticle-service.port}") String newsArticleServicePort
+        ObjectMapper mapper
     ) {
         this.publishEventScheduler = publishEventScheduler;
         this.streamBridge = streamBridge;
         this.webClient = webClient.build();
         this.mapper = mapper;
-        candidateServiceUrl = "http://" + candidateServiceHost + ":" + candidateServicePort;
-        commentServiceUrl = "http://" + commentServiceHost + ":" + commentServicePort;
-        newsArticleServiceUrl = "http://" + newsArticleServiceHost + ":" + newsArticleServicePort;
     }
 
     @Override
@@ -84,7 +75,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     @Override
     public Mono<Candidate> getCandidate(int candidateId) {
-        String url = candidateServiceUrl + "/candidate/" + candidateId;
+        String url = CANDIDATE_SERVICE_URL + "/candidate/" + candidateId;
         return webClient.get()
         .uri(url)
         .retrieve()
@@ -112,7 +103,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     @Override
     public Flux<Comment> getComments(int candidateId) {
-        String url = commentServiceUrl + "/comment?candidateId=" + candidateId;
+        String url = COMMENT_SERVICE_URL + "/comment?candidateId=" + candidateId;
         return webClient.get()
         .uri(url)
         .retrieve()
@@ -141,7 +132,7 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     @Override
     public Flux<NewsArticle> getNewsArticles(int candidateId) {
-        String url = newsArticleServiceUrl + "/news-article?candidateId=" + candidateId;
+        String url = NEWSARTICLE_SERVICE_URL + "/news-article?candidateId=" + candidateId;
         return webClient.get()
         .uri(url)
         .retrieve()
@@ -161,18 +152,18 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
     }
 
     public Mono<Health> getCandidateHealth() {
-        LOG.debug("candidate url:" + candidateServiceUrl);
-        return getHealth(candidateServiceUrl);
+        LOG.debug("candidate url:" + CANDIDATE_SERVICE_URL);
+        return getHealth(CANDIDATE_SERVICE_URL);
     }
 
     public Mono<Health> getCommentHealth() {
-        LOG.debug("comment url:" + candidateServiceUrl);
-        return getHealth(commentServiceUrl);
+        LOG.debug("comment url:" + CANDIDATE_SERVICE_URL);
+        return getHealth(COMMENT_SERVICE_URL);
     }
 
     public Mono<Health> getNewsArticleHealth() {
-        LOG.debug("newsArticle url:" + candidateServiceUrl);
-        return getHealth(newsArticleServiceUrl);
+        LOG.debug("newsArticle url:" + CANDIDATE_SERVICE_URL);
+        return getHealth(NEWSARTICLE_SERVICE_URL);
     }
 
     private Mono<Health> getHealth(String url) {

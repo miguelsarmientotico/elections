@@ -160,3 +160,14 @@ services:
     environment:
       - ZOOKEEPER_CLIENT_PORT=2181
 
+  eureka:
+    build: springcloud/eurekaserver
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - "8761:8761"
+
+
+
