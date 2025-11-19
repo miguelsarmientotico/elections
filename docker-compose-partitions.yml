@@ -51,7 +51,7 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-  news-article:
+  newsarticle:
     build: microservices/news-article-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
@@ -64,7 +64,7 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-  news-article-p1:
+  newsarticle-p1:
     build: microservices/news-article-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1

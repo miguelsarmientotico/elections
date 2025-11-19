@@ -55,7 +55,7 @@ services:
       kafka:
         condition: service_started
 
-  news-article:
+  newsarticle:
     build: microservices/news-article-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0,kafka
@@ -69,7 +69,7 @@ services:
       kafka:
         condition: service_started
 
-  news-article-p1:
+  newsarticle-p1:
     build: microservices/news-article-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1,kafka

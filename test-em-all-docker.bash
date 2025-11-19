@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 : ${HOST=localhost}
-: ${PORT=8080}
+: ${PORT=8443}
 : ${CAND_ID_CMTS_NEWS=1}
 : ${CAND_ID_NOT_FOUND=13}
 : ${CAND_ID_NOT_CMTS=113}
@@ -77,7 +77,7 @@ function waitForService() {
 function testCompositeCreated() {
 
     # Expect that the Product Composite for productId $PROD_ID_REVS_RECS has been created with three recommendations and three reviews
-    if ! assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
+    if ! assertCurl 200 "curl -k https://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
     then
         echo -n "FAIL"
         return 1
@@ -122,8 +122,8 @@ function recreateComposite() {
   local candidateId=$1
   local composite=$2
 
-  assertCurl 202 "curl -X DELETE http://$HOST:$PORT/candidate-composite/${candidateId} -s"
-  assertEqual 202 $(curl -X POST -s http://$HOST:$PORT/candidate-composite -H "Content-Type: application/json" --data "$composite" -w "%{http_code}")
+  assertCurl 202 "curl -X DELETE -k https://$HOST:$PORT/candidate-composite/${candidateId} -s"
+  assertEqual 202 $(curl -k -X POST -s https://$HOST:$PORT/candidate-composite -H "Content-Type: application/json" --data "$composite" -w "%{http_code}")
 }
 
 function setupTestdata() {
@@ -178,10 +178,10 @@ then
   docker compose up -d --build
 fi
 
-waitForService curl http://$HOST:$PORT/actuator/health
+waitForService curl https://$HOST:$PORT/actuator/health
 
-assertCurl 200 "curl -H "accept:application/json" $HOST:8761/eureka/apps -s"
-assertEqual 4 $(echo $RESPONSE | jq ".applications.application | length")
+assertCurl 200 "curl -H "accept:application/json" -k https://u:p@$HOST:$PORT/eureka/api/apps -s"
+assertEqual 5 $(echo $RESPONSE | jq ".applications.application | length")
 
 echo "test setupTestdata"
 setupTestdata
@@ -190,38 +190,38 @@ echo "test message"
 waitForMessageProcessing
 
 echo "init asserts"
-assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
+assertCurl 200 "curl -k https://$HOST:$PORT/candidate-composite/$CAND_ID_CMTS_NEWS -s"
 assertEqual $CAND_ID_CMTS_NEWS $(echo $RESPONSE | jq .candidateId)
 assertEqual 3 $(echo $RESPONSE | jq ".comments | length")
 assertEqual 3 $(echo $RESPONSE | jq ".newsArticles | length")
 
-assertCurl 404 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_FOUND -S"
+assertCurl 404 "curl -k https://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_FOUND -S"
 assertEqual "No candidate found for candidateId: $CAND_ID_NOT_FOUND" "$(echo $RESPONSE | jq -r .message)"
 
-assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_NEWS -s"
+assertCurl 200 "curl -k https://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_NEWS -s"
 assertEqual $CAND_ID_NOT_NEWS $(echo $RESPONSE | jq .candidateId)
 assertEqual 3 $(echo $RESPONSE | jq ".comments | length")
 assertEqual 0 $(echo $RESPONSE | jq ".newsArticles | length")
 
-assertCurl 200 "curl http://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_CMTS -s"
+assertCurl 200 "curl -k https://$HOST:$PORT/candidate-composite/$CAND_ID_NOT_CMTS -s"
 assertEqual $CAND_ID_NOT_CMTS $(echo $RESPONSE | jq .candidateId)
 assertEqual 0 $(echo $RESPONSE | jq ".comments | length")
 assertEqual 3 $(echo $RESPONSE | jq ".newsArticles | length")
 
-assertCurl 422 "curl http://$HOST:$PORT/candidate-composite/-1 -s"
+assertCurl 422 "curl -k https://$HOST:$PORT/candidate-composite/-1 -s"
 assertEqual "\"Invalid candidateId: -1\"" "$(echo $RESPONSE | jq .message)"
 
-assertCurl 400 "curl http://$HOST:$PORT/candidate-composite/invalidCandidateId -s"
+assertCurl 400 "curl -k https://$HOST:$PORT/candidate-composite/invalidCandidateId -s"
 assertEqual "\"Type mismatch.\"" "$(echo $RESPONSE | jq .message)"
 
 echo "Swagger/OpenAPI tests"
-assertCurl 302 "curl -s  http://$HOST:$PORT/openapi/swagger-ui.html"
-assertCurl 200 "curl -sL http://$HOST:$PORT/openapi/swagger-ui.html"
-assertCurl 200 "curl -s  http://$HOST:$PORT/openapi/webjars/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config"
-assertCurl 200 "curl -s  http://$HOST:$PORT/openapi/v3/api-docs"
+assertCurl 302 "curl -k -s  https://$HOST:$PORT/openapi/swagger-ui.html"
+assertCurl 200 "curl -k -sL https://$HOST:$PORT/openapi/swagger-ui.html"
+assertCurl 200 "curl -k -s  https://$HOST:$PORT/openapi/webjars/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config"
+assertCurl 200 "curl -k -s  https://$HOST:$PORT/openapi/v3/api-docs"
 assertEqual "3.1.0" "$(echo $RESPONSE | jq -r .openapi)"
-assertEqual "http://$HOST:$PORT" "$(echo $RESPONSE | jq -r '.servers[0].url')"
-assertCurl 200 "curl -s  http://$HOST:$PORT/openapi/v3/api-docs.yaml"
+assertEqual "https://$HOST:$PORT" "$(echo $RESPONSE | jq -r '.servers[0].url')"
+assertCurl 200 "curl -k -s  https://$HOST:$PORT/openapi/v3/api-docs.yaml"
 
 
 if [[ $@ == *"stop"* ]]

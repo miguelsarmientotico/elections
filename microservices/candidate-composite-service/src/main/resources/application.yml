@@ -3,6 +3,9 @@ springdoc:
   api-docs.path: /openapi/v3/api-docs
   packagesToScan: pe.elections.microservices.composite.candidate
   pathsToMatch: /**
+  cache.disabled: true
+
+server.forward-headers-strategy: framework
 
 api:
   common:
@@ -38,12 +41,15 @@ server.error.include-message: always
 
 spring.application.name: candidate-composite
 
-app.eureka-server: localhost
+app:
+  eureka-username: u
+  eureka-password: p
+  eureka-server: localhost
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://${app.eureka-server}:8761/eureka/
+      defaultZone: "http://${app.eureka-username}:${app.eureka-password}@${app.eureka-server}:8761/eureka/"
     initialInstanceInfoReplicationIntervalSeconds: 5
     registryFetchIntervalSeconds: 5
   instance:
@@ -90,7 +96,8 @@ spring.config.activate.on-profile: docker
 
 server.port: 8080
 
-app.eureka-server: eureka
+app:
+  eureka-server: eureka
 
 spring.rabbitmq.host: rabbitmq
 
