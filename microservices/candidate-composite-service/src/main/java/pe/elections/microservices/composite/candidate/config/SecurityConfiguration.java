@@ -1,4 +1,6 @@
-package pe.elections.springcloud.gateway.config;
+package pe.elections.microservices.composite.candidate.config;
+
+import static org.springframework.http.HttpMethod.*;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,17 +14,16 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfiguration {
 
     @Bean
-    SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()
+    SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        http
             .authorizeExchange(exchange -> exchange
-                .pathMatchers("/headerrouting/**").permitAll()
-                .pathMatchers("/actuator/**").permitAll()
-                .pathMatchers("/eureka/**").permitAll()
-                .pathMatchers("/oauth2/**").permitAll()
-                .pathMatchers("/login/**").permitAll()
-                .pathMatchers("/error/**").permitAll()
                 .pathMatchers("/openapi/**").permitAll()
-                .anyExchange().authenticated()))
+                .pathMatchers("/actuator/**").permitAll()
+                .pathMatchers(POST, "/candidate-composite/**").hasAuthority("SCOPE_candidate:write")
+                .pathMatchers(DELETE, "/candidate-composite/**").hasAuthority("SCOPE_candidate:write")
+                .pathMatchers(GET, "/candidate-composite/**").hasAuthority("SCOPE_candidate:read")
+                .anyExchange().authenticated()
+            )
             .oauth2ResourceServer(server -> server.jwt(Customizer.withDefaults()));
         return http.build();
     }

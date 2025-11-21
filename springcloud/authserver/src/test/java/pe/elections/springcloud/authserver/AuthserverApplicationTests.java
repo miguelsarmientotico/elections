@@ -27,7 +27,7 @@ class AuthserverApplicationTests {
             .perform(
                 post("/oauth2/token")
                 .param("grant_type", "client_credentials")
-                .header("Authorization", "Basic" + base64Credentials)
+                .header("Authorization", "Basic " + base64Credentials)
             )
             .andExpect(status().isOk());
     }

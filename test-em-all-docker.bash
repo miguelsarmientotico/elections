@@ -178,7 +178,7 @@ then
   docker compose up -d --build
 fi
 
-waitForService curl https://$HOST:$PORT/actuator/health
+waitForService curl -k https://$HOST:$PORT/actuator/health
 
 assertCurl 200 "curl -H "accept:application/json" -k https://u:p@$HOST:$PORT/eureka/api/apps -s"
 assertEqual 5 $(echo $RESPONSE | jq ".applications.application | length")

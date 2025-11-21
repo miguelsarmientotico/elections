@@ -126,7 +126,7 @@ services:
   authserver:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-    build: spring-cloud/authorization-server
+    build: springcloud/authserver
     deploy:
       resources:
         limits:

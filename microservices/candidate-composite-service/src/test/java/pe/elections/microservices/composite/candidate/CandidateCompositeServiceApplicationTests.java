@@ -8,7 +8,6 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 import static java.util.Collections.singletonList;
 
@@ -29,7 +28,13 @@ import pe.elections.microservices.composite.candidate.services.CandidateComposit
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"eureka.client.enabled=false"})
+@SpringBootTest(
+    webEnvironment = RANDOM_PORT,
+    classes = {TestSecurityConfig.class},
+    properties = {
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=",
+        "spring.main.allow-bean-definition-overriding=true",
+        "eureka.client.enabled=false"})
 class CandidateCompositeServiceApplicationTests {
 
     private static final int CANDIDATE_ID_OK = 1;

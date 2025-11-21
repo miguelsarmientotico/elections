@@ -2,17 +2,14 @@ package pe.elections.microservices.composite.candidate.services;
 
 import static pe.elections.microservices.api.event.Event.Type.CREATE;
 import static pe.elections.microservices.api.event.Event.Type.DELETE;
-import static reactor.core.publisher.Mono.empty;
+import static reactor.core.publisher.Flux.empty;
 
 import java.io.IOException;
 import java.util.logging.Level;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
@@ -51,17 +48,16 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
 
     private final Scheduler publishEventScheduler;
 
-    @Autowired
     public CandidateCompositeIntegration(
         @Qualifier("publishEventScheduler")
         Scheduler publishEventScheduler,
         StreamBridge streamBridge,
-        WebClient.Builder webClient,
+        WebClient.Builder webClientBuilder,
         ObjectMapper mapper
     ) {
         this.publishEventScheduler = publishEventScheduler;
         this.streamBridge = streamBridge;
-        this.webClient = webClient.build();
+        this.webClient = webClientBuilder.build();
         this.mapper = mapper;
     }
 
@@ -151,32 +147,6 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
         .then();
     }
 
-    public Mono<Health> getCandidateHealth() {
-        LOG.debug("candidate url:" + CANDIDATE_SERVICE_URL);
-        return getHealth(CANDIDATE_SERVICE_URL);
-    }
-
-    public Mono<Health> getCommentHealth() {
-        LOG.debug("comment url:" + CANDIDATE_SERVICE_URL);
-        return getHealth(COMMENT_SERVICE_URL);
-    }
-
-    public Mono<Health> getNewsArticleHealth() {
-        LOG.debug("newsArticle url:" + CANDIDATE_SERVICE_URL);
-        return getHealth(NEWSARTICLE_SERVICE_URL);
-    }
-
-    private Mono<Health> getHealth(String url) {
-        url += "/actuator/health";
-        return webClient.get()
-        .uri(url)
-        .retrieve()
-        .bodyToMono(String.class)
-        .map(s -> new Health.Builder().up().build())
-        .onErrorResume(ex -> Mono.just(new Health.Builder().down(ex).build()))
-        .log(LOG.getName(), Level.FINE);
-    }
-
     private void sendMessage(String bindingName, Event<?, ?> event) {
         Message<?> message = MessageBuilder.withPayload(event)
         .setHeader("partitionKey", event.getKey())
@@ -192,9 +162,9 @@ public class CandidateCompositeIntegration implements CandidateService, CommentS
         WebClientResponseException wcre = (WebClientResponseException)ex;
         switch (HttpStatus.resolve(wcre.getStatusCode().value())) {
             case NOT_FOUND:
-                return  new NotFoundException(getErrorMessage(wcre));
+                return new NotFoundException(getErrorMessage(wcre));
             case UNPROCESSABLE_ENTITY:
-                return  new InvalidInputException(getErrorMessage(wcre));
+                return new InvalidInputException(getErrorMessage(wcre));
             default:
                 LOG.warn("Got an unexpected HTTP error: {}, will rethrow it", wcre.getStatusCode());
                 LOG.warn("Error body: {}", wcre.getResponseBodyAsString());
