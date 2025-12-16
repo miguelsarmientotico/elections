@@ -1,12 +1,13 @@
-spring.application.name: authserver
-server.port: 9999
-server.forward-headers-strategy: framework
+# ========== CONFIGURACIÓN BÁSICA DE LA APLICACIÓN ==========
+spring:
+  application:
+    name: authserver
 
-app:
-  eureka-username: u
-  eureka-password: p
-  eureka-server: localhost
+server:
+  port: 9999
+  forward-headers-strategy: framework
 
+# ========== CONFIGURACIÓN EUREKA ==========
 eureka:
   client:
     serviceUrl:
@@ -17,14 +18,33 @@ eureka:
     leaseRenewalIntervalInSeconds: 5
     leaseExpirationDurationInSeconds: 5
 
-management.endpoint.health.show-details: "ALWAYS"
-management.endpoints.web.exposure.include: "*"
+# ========== CONFIGURACIÓN MANAGEMENT ==========
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
+# ========== CONFIGURACIÓN LOGGING ==========
 logging:
   level:
     root: INFO
 
----
-spring.config.activate.on-profile: docker
+# ========== VARIABLES DE APLICACIÓN ==========
+app:
+  eureka-username: u
+  eureka-password: p
+  eureka-server: localhost
 
-app.eureka-server: eureka
+---
+# ========== CONFIGURACIÓN DOCKER ==========
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+app:
+  eureka-server: eureka

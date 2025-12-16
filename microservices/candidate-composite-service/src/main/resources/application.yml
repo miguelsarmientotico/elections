@@ -1,22 +1,34 @@
-springdoc:
-  swagger-ui.path: /openapi/swagger-ui.html
-  api-docs.path: /openapi/v3/api-docs
-  packagesToScan: pe.elections.microservices.composite.candidate
-  pathsToMatch: /**
-  cache.disabled: true
+# ========== CONFIGURACIÓN BÁSICA DE LA APLICACIÓN ==========
+spring:
+  application:
+    name: candidate-composite
 
+server:
+  port: 7001
+  error:
+    include-message: always
+  forward-headers-strategy: framework
+
+# ========== CONFIGURACIÓN SPRINGDOC OPENAPI ==========
+springdoc:
   swagger-ui:
+    path: /openapi/swagger-ui.html
     oauth2-redirect-url: /swagger-ui/oauth2-redirect.html
     oauth:
       clientId: writer
       clientSecret: secret-writer
       useBasicAuthenticationWithAccessCodeGrant: true
+  api-docs:
+    path: /openapi/v3/api-docs
+  packagesToScan: pe.elections.microservices.composite.candidate
+  pathsToMatch: /**
+  cache:
+    disabled: true
   oAuthFlow:
     authorizationUrl: https://localhost:8443/oauth2/authorize
     tokenUrl: https://localhost:8443/oauth2/token
 
-server.forward-headers-strategy: framework
-
+# ========== CONFIGURACIÓN DE LA API ==========
 api:
   common:
     version: 1.0.0
@@ -25,20 +37,23 @@ api:
     termsOfService: MY TERMS OF SERVICE
     license: License Candidate
     licenseUrl: License Candidate URL
-
     externalDocDesc: Pagina Wiki
     externalDocUrl: Pagina Wiki URL
     contact:
       name: Name contact
       url: URL contact
       email: sarmientomiguel3@gmail.com
-
+  
   responseCodes:
-    ok.description: OK
-    badRequest.description: Bad Request, invalid format of the request. See response message for more information
-    notFound.description: Not Found, the specific id does not exist
-    unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message form more information
-
+    ok:
+      description: OK
+    badRequest:
+      description: Bad Request, invalid format of the request. See response message for more information
+    notFound:
+      description: Not Found, the specific id does not exist
+    unprocessableEntity:
+      description: Unprocessable entity, input parameters caused the processing to fail. See response message form more information
+  
   candidate-composite:
     get-composite-candidate:
       description: Return a composite view of the specified candidate id
@@ -46,17 +61,7 @@ api:
         # Normal response
         Returns the candidate information along with related comments and news articles
 
-server.port: 7000
-server.error.include-message: always
-
-spring.application.name: candidate-composite
-
-app:
-  eureka-username: u
-  eureka-password: p
-  eureka-server: localhost
-  auth-server: localhost
-
+# ========== CONFIGURACIÓN EUREKA ==========
 eureka:
   client:
     serviceUrl:
@@ -67,76 +72,136 @@ eureka:
     leaseRenewalIntervalInSeconds: 5
     leaseExpirationDurationInSeconds: 5
 
+# ========== CONFIGURACIÓN SPRING CLOUD STREAM ==========
+spring:
+  cloud:
+    stream:
+      defaultBinder: rabbit
+      default:
+        contentType: application/json
+      bindings:
+        candidates-out-0:
+          destination: candidates
+          producer:
+            required-groups: auditGroup
+        comments-out-0:
+          destination: comments
+          producer:
+            required-groups: auditGroup
+        newsarticles-out-0:
+          destination: newsarticles
+          producer:
+            required-groups: auditGroup
+    stream:
+      kafka:
+        binder:
+          brokers: 127.0.0.1
+          defaultBrokerPort: 9092
 
-spring.cloud.stream:
-  defaultBinder: rabbit
-  default.contentType: application/json
-  bindings:
-    candidates-out-0:
-      destination: candidates
-      producer:
-        required-groups: auditGroup
-    comments-out-0:
-      destination: comments
-      producer:
-        required-groups: auditGroup
-    newsarticles-out-0:
-      destination: newsarticles
-      producer:
-        required-groups: auditGroup
+# ========== CONFIGURACIÓN MESSAGE BROKERS ==========
+spring:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
 
-spring.cloud.stream.kafka.binder:
-  brokers: 127.0.0.1
-  defaultBrokerPort: 9092
+# ========== CONFIGURACIÓN DE SEGURIDAD ==========
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${app.auth-server}:9999
 
-spring.rabbitmq:
-  host: 127.0.0.1
-  port: 5672
-  username: guest
-  password: guest
+# ========== CONFIGURACIÓN MANAGEMENT ==========
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
-spring.security.oauth2.resourceserver.jwt.issuer-uri: http://${app.auth-server}:9999
-
+# ========== CONFIGURACIÓN LOGGING ==========
 logging:
   level:
     root: INFO
-    se.magnus: DEBUG
+    pe.elections: DEBUG
+    org.springframework.web.server.adapter.HttpWebHandlerAdapter: TRACE
 
-management.endpoint.health.show-details: "ALWAYS"
-management.endpoints.web.exposure.include: "*"
+# ========== VARIABLES DE APLICACIÓN ==========
+app:
+  eureka-username: u
+  eureka-password: p
+  eureka-server: localhost
+  auth-server: localhost
+
 ---
-spring.config.activate.on-profile: docker
+# ========== CONFIGURACIÓN DOCKER ==========
+spring:
+  config:
+    activate:
+      on-profile: docker
 
-server.port: 8080
+server:
+  port: 8080
 
 app:
   eureka-server: eureka
   auth-server: https://dev-ytiqdtrd7n283l1w.us.auth0.com/
-  #auth-server: authserver
 
-spring.rabbitmq.host: rabbitmq
-
-spring.cloud.stream.kafka.binder.brokers: kafka
-
----
-spring.config.activate.on-profile: streaming_partitioned
-
-spring.cloud.stream.bindings.candidates-out-0.producer:
-  partition-key-expression: headers['partitionKey']
-  partition-count: 2
-
-spring.cloud.stream.bindings.comments-out-0.producer:
-  partition-key-expression: headers['partitionKey']
-  partition-count: 2
-
-spring.cloud.stream.bindings.newsarticles-out-0.producer:
-  partition-key-expression: headers['partitionKey']
-  partition-count: 2
+spring:
+  rabbitmq:
+    host: rabbitmq
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka
 
 ---
-spring.config.activate.on-profile: kafka
+# ========== CONFIGURACIÓN STREAMING PARTICIONADO ==========
+spring:
+  config:
+    activate:
+      on-profile: streaming_partitioned
 
-management.health.rabbit.enabled: false
-spring.cloud.stream.defaultBinder: kafka
-spring.kafka.bootstrap-servers: kafka:9092
-spring.cloud.stream.kafka.binder.replication-factor: 1
+  cloud:
+    stream:
+      bindings:
+        candidates-out-0:
+          producer:
+            partition-key-expression: headers['partitionKey']
+            partition-count: 2
+        comments-out-0:
+          producer:
+            partition-key-expression: headers['partitionKey']
+            partition-count: 2
+        newsarticles-out-0:
+          producer:
+            partition-key-expression: headers['partitionKey']
+            partition-count: 2
+
+---
+# ========== CONFIGURACIÓN KAFKA ==========
+spring:
+  config:
+    activate:
+      on-profile: kafka
+
+  cloud:
+    stream:
+      defaultBinder: kafka
+    stream:
+      kafka:
+        binder:
+          replication-factor: 1
+  kafka:
+    bootstrap-servers: kafka:9092
+
+management:
+  health:
+    rabbit:
+      enabled: false

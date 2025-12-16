@@ -1,30 +1,85 @@
-server.port: 8443
+# ========== CONFIGURACIÓN BÁSICA DE LA APLICACIÓN ==========
+server:
+  port: 8443
+  ssl:
+    bundle: gateway
 
-spring.application.name: gateway
+spring:
+  application:
+    name: gateway
+  config:
+    activate:
+      on-profile: default
+  
+  # ========== CONFIGURACIÓN SSL ==========
+  ssl:
+    bundle:
+      jks:
+        gateway:
+          key:
+            alias: localhost
+          keystore:
+            type: PKCS12
+            location: classpath:keystore/edge.p12
+            password: changeit
+  
+  # ========== CONFIGURACIÓN DE SEGURIDAD ==========
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${app.auth-server}:9999
+  
+  # ========== CONFIGURACIÓN GATEWAY ==========
+  cloud:
+    gateway:
+      server:
+        webflux:
+          trusted-proxies: ".*"
+          routes:
+            # Autenticación
+            - id: oauth2-server
+              uri: lb://authserver
+              predicates:
+                - Path=/oauth2/**
+            - id: oauth2-login
+              uri: lb://authserver
+              predicates:
+                - Path=/login/**
+            - id: oauth2-error
+              uri: lb://authserver
+              predicates:
+                - Path=/error/**
+            
+            # Servicios de aplicación
+            - id: candidate-composite
+              uri: lb://candidate-composite
+              predicates:
+                - Path=/candidate-composite/**
+            - id: candidate-composite-swagger-ui
+              uri: lb://candidate-composite
+              predicates:
+                - Path=/openapi/**
+            
+            # Eureka UI y API
+            - id: eureka-api
+              uri: http://${app.eureka-server}:8761
+              predicates:
+                - Path=/eureka/api/{segment}
+              filters:
+                - SetPath=/eureka/{segment}
+            - id: eureka-web-start
+              uri: http://${app.eureka-server}:8761
+              predicates:
+                - Path=/eureka/web
+              filters:
+                - SetPath=/
+            - id: eureka-web-other
+              uri: http://${app.eureka-server}:8761
+              predicates:
+                - Path=/eureka/**
 
-# During development, allow forwarding the X-Forwarded-* and Forwarded headers from any proxies.
-# When usd in QA and production, this should be set to a specific IP address or CIDR range, e.g. 10\.0\.0\..* (Java Regular Expression).
-# For more information, see https://spring.io/security/cve-2025-41235
-spring.cloud.gateway.server.webflux.trusted-proxies: ".*"
-
-spring.ssl.bundle.jks.gateway:
-  key:
-    alias: localhost
-  keystore:
-    type: PKCS12
-    location: classpath:keystore/edge.p12
-    password: changeit
-
-server.ssl.bundle: gateway
-
-app.auth-server: localhost
-
-app.eureka-server: localhost
-
-app:
-  eureka-username: u
-  eureka-password: p
-
+# ========== CONFIGURACIÓN EUREKA ==========
 eureka:
   client:
     serviceUrl:
@@ -35,61 +90,40 @@ eureka:
     leaseRenewalIntervalInSeconds: 5
     leaseExpirationDurationInSeconds: 5
 
-spring.cloud.gateway.server.webflux.routes:
-- id: oauth2-server
-  uri: lb://authserver
-  predicates:
-  - Path=/oauth2/**
-- id: oauth2-login
-  uri: lb://authserver
-  predicates:
-  - Path=/login/**
-- id: oauth2-error
-  uri: lb://authserver
-  predicates:
-  - Path=/error/**
-- id: candidate-composite
-  uri: lb://candidate-composite
-  predicates:
-  - Path=/candidate-composite/**
-- id: candidate-composite-swagger-ui
-  uri: lb://candidate-composite
-  predicates:
-  - Path=/openapi/**
-- id: eureka-api
-  uri: http://${app.eureka-server}:8761
-  predicates:
-  - Path=/eureka/api/{segment}
-  filters:
-  - SetPath=/eureka/{segment}
-- id: eureka-web-start
-  uri: http://${app.eureka-server}:8761
-  predicates:
-  - Path=/eureka/web
-  filters:
-  - SetPath=/
+# ========== CONFIGURACIÓN MANAGEMENT ==========
+management:
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 
-- id: eureka-web-other
-  uri: http://${app.eureka-server}:8761
-  predicates:
-  - Path=/eureka/**
-
-spring.security.oauth2.resourceserver.jwt.issuer-uri: http://${app.auth-server}:9999
-
-management.endpoint.gateway.enabled: true
-management.endpoint.health.show-details: "ALWAYS"
-management.endpoints.web.exposure.include: '*'
-
+# ========== CONFIGURACIÓN LOGGING ==========
 logging:
   level:
     root: INFO
     org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: INFO
     org.springframework.cloud.gateway: TRACE
+    org.springframework.web.server.adapter.HttpWebHandlerAdapter: TRACE
+
+# ========== VARIABLES DE APLICACIÓN ==========
+app:
+  auth-server: localhost
+  eureka-server: localhost
+  eureka-username: u
+  eureka-password: p
 
 ---
-spring.config.activate.on-profile: docker
+# ========== CONFIGURACIÓN DOCKER ==========
+spring:
+  config:
+    activate:
+      on-profile: docker
+
 app:
   eureka-server: eureka
   auth-server: https://dev-ytiqdtrd7n283l1w.us.auth0.com/
-  #auth-server: authserver
-  auth-server: authserver
